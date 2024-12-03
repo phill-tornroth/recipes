@@ -1,0 +1,376 @@
+- title: Grilled Chicken Salad
+  estimated_cooking_time: 25 minutes
+  serves: 4
+  ingredients:
+    - name: Chicken breast
+      qty: 2 pieces
+    - name: Lettuce
+      qty: 1 head
+    - name: Tomatoes
+      qty: 2, chopped
+    - name: Cucumber
+      qty: 1, sliced
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+  steps:
+    - step: Season the chicken breasts with salt and pepper.
+    - step: Grill the chicken until cooked through.
+    - step: Chop the lettuce and mix with tomatoes and cucumber.
+    - step: Slice the grilled chicken and add to the salad.
+    - step: Drizzle with olive oil and toss to combine.
+  notes: Best served chilled.
+- title: Spaghetti Bolognese
+  estimated_cooking_time: 1 hour
+  serves: 4
+  ingredients:
+    - name: Spaghetti
+      qty: 400g
+    - name: Ground beef
+      qty: 500g
+    - name: Onion
+      qty: 1, chopped
+    - name: Garlic cloves
+      qty: 2, minced
+    - name: Tomato sauce
+      qty: 400g
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+    - name: Parmesan cheese
+      qty: to serve
+  steps:
+    - step: Cook the spaghetti according to package instructions.
+    - step:
+        "In a large pan, heat the olive oil and saut\xE9 the onion and garlic until\
+        \ soft."
+    - step: Add the ground beef and cook until browned.
+    - step:
+        Pour in the tomato sauce, season with salt and pepper, and simmer for 30
+        minutes.
+    - step: Serve the sauce over the cooked spaghetti and top with Parmesan cheese.
+  notes: For extra flavor, add a splash of red wine to the sauce while simmering.
+- title: Chicken Alfredo
+  estimated_cooking_time: 30 minutes
+  serves: 4
+  ingredients:
+    - name: Fettuccine
+      qty: 400g
+    - name: Chicken breast
+      qty: 2 pieces
+    - name: Butter
+      qty: 4 tablespoons
+    - name: Heavy cream
+      qty: 1 cup
+    - name: Parmesan cheese
+      qty: 1 cup, grated
+    - name: Garlic
+      qty: 2 cloves, minced
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+    - name: Parsley
+      qty: for garnish
+  steps:
+    - step: Cook the fettuccine according to package instructions.
+    - step:
+        Season the chicken breasts with salt and pepper, then cook in a pan until
+        done.
+    - step: "In a saucepan, melt the butter and saut\xE9 the garlic until fragrant."
+    - step: Add the heavy cream and bring to a simmer.
+    - step: Stir in the Parmesan cheese until melted and smooth.
+    - step:
+        Toss the cooked fettuccine in the sauce and serve with sliced chicken on
+        top.
+    - step: Garnish with parsley and serve immediately.
+  notes: You can add a pinch of nutmeg to the sauce for extra flavor.
+- title: Beef Tacos
+  estimated_cooking_time: 20 minutes
+  serves: 4
+  ingredients:
+    - name: Ground beef
+      qty: 500g
+    - name: Taco seasoning
+      qty: 1 packet
+    - name: Taco shells
+      qty: "8"
+    - name: Lettuce
+      qty: 1 cup, shredded
+    - name: Tomatoes
+      qty: 1 cup, diced
+    - name: Cheddar cheese
+      qty: 1 cup, shredded
+    - name: Sour cream
+      qty: 1/2 cup
+    - name: Salsa
+      qty: 1/2 cup
+  steps:
+    - step: Cook the ground beef in a pan over medium heat until browned.
+    - step: Add the taco seasoning and water according to package instructions and simmer.
+    - step: Warm the taco shells in the oven or microwave.
+    - step:
+        Assemble the tacos with beef, lettuce, tomatoes, cheese, sour cream, and
+        salsa.
+    - step: Serve immediately.
+  notes: "For a spicier kick, add some chopped jalape\xF1os."
+- title: Vegetable Stir Fry
+  estimated_cooking_time: 15 minutes
+  serves: 4
+  ingredients:
+    - name: Mixed vegetables
+      qty: 4 cups, chopped
+    - name: Soy sauce
+      qty: 3 tablespoons
+    - name: Garlic
+      qty: 2 cloves, minced
+    - name: Ginger
+      qty: 1 tablespoon, grated
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Sesame oil
+      qty: 1 teaspoon
+    - name: Green onions
+      qty: 2, sliced
+    - name: Sesame seeds
+      qty: for garnish
+  steps:
+    - step: Heat olive oil in a large pan over medium-high heat.
+    - step: "Add garlic and ginger and saut\xE9 until fragrant."
+    - step: Add mixed vegetables and stir-fry until tender-crisp.
+    - step: Pour in soy sauce and sesame oil and stir to combine.
+    - step: Garnish with green onions and sesame seeds before serving.
+  notes: Serve with steamed rice or noodles.
+- title: Pancakes
+  estimated_cooking_time: 20 minutes
+  serves: 4
+  ingredients:
+    - name: Flour
+      qty: 1 1/2 cups
+    - name: Milk
+      qty: 1 1/4 cups
+    - name: Egg
+      qty: "1"
+    - name: Sugar
+      qty: 3 tablespoons
+    - name: Baking powder
+      qty: 3 1/2 teaspoons
+    - name: Salt
+      qty: 1/2 teaspoon
+    - name: Butter
+      qty: 3 tablespoons, melted
+    - name: Vanilla extract
+      qty: 1 teaspoon
+  steps:
+    - step: In a bowl, mix flour, sugar, baking powder, and salt.
+    - step: In another bowl, whisk together milk, egg, melted butter, and vanilla extract.
+    - step: Combine wet and dry ingredients and stir until smooth.
+    - step: Heat a lightly oiled griddle over medium-high heat.
+    - step: Pour batter onto the griddle and cook until bubbles form on the surface.
+    - step: Flip and cook until browned on the other side.
+    - step: Serve with maple syrup and butter.
+  notes: Add fresh berries or chocolate chips to the batter for extra flavor.
+- title: Lemon Garlic Shrimp Pasta
+  estimated_cooking_time: 30 minutes
+  serves: 4
+  ingredients:
+    - name: Spaghetti
+      qty: 400g
+    - name: Shrimp
+      qty: 500g, peeled and deveined
+    - name: Garlic
+      qty: 4 cloves, minced
+    - name: Lemon
+      qty: 1, juiced and zested
+    - name: Olive oil
+      qty: 4 tablespoons
+    - name: Parsley
+      qty: 1/4 cup, chopped
+    - name: Red pepper flakes
+      qty: 1/2 teaspoon
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+  steps:
+    - step: Cook the spaghetti according to package instructions.
+    - step: In a large pan, heat 2 tablespoons of olive oil over medium heat.
+    - step: "Add the minced garlic and red pepper flakes, saut\xE9 until fragrant."
+    - step: Add the shrimp and cook until pink and opaque.
+    - step: Add the cooked spaghetti, remaining olive oil, lemon juice, and zest.
+    - step: Toss to combine and heat through.
+    - step: Season with salt and pepper, and garnish with parsley before serving.
+  notes: Serve with a side of garlic bread.
+- title: Vegetarian Chili
+  estimated_cooking_time: 40 minutes
+  serves: 6
+  ingredients:
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Onion
+      qty: 1, chopped
+    - name: Garlic
+      qty: 3 cloves, minced
+    - name: Bell pepper
+      qty: 1, chopped
+    - name: Carrot
+      qty: 1, diced
+    - name: Zucchini
+      qty: 1, diced
+    - name: Tomato sauce
+      qty: 400g
+    - name: Kidney beans
+      qty: 1 can, drained
+    - name: Black beans
+      qty: 1 can, drained
+    - name: Corn
+      qty: 1 cup
+    - name: Chili powder
+      qty: 2 tablespoons
+    - name: Cumin
+      qty: 1 teaspoon
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+    - name: Cilantro
+      qty: for garnish
+  steps:
+    - step: Heat the olive oil in a large pot over medium heat.
+    - step: "Add the onion and garlic, saut\xE9 until soft."
+    - step: Add the bell pepper, carrot, and zucchini, cook until tender.
+    - step: Stir in the tomato sauce, beans, corn, chili powder, and cumin.
+    - step: Simmer for 20 minutes, stirring occasionally.
+    - step: Season with salt and pepper.
+    - step: Garnish with cilantro before serving.
+  notes: Serve with cornbread or over rice.
+- title: Caprese Salad
+  estimated_cooking_time: 10 minutes
+  serves: 2
+  ingredients:
+    - name: Tomatoes
+      qty: 2, sliced
+    - name: Fresh mozzarella
+      qty: 1 ball, sliced
+    - name: Fresh basil
+      qty: 1 bunch
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Balsamic vinegar
+      qty: 1 tablespoon
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+  steps:
+    - step:
+        Arrange the tomato and mozzarella slices on a plate, alternating between
+        the two.
+    - step: Tuck fresh basil leaves between the slices.
+    - step: Drizzle with olive oil and balsamic vinegar.
+    - step: Season with salt and black pepper to taste.
+    - step: Serve immediately.
+  notes: Use high-quality ingredients for the best flavor.
+- title: Greek Salad
+  estimated_cooking_time: 15 minutes
+  serves: 4
+  ingredients:
+    - name: Cucumber
+      qty: 1, chopped
+    - name: Tomatoes
+      qty: 4, chopped
+    - name: Red onion
+      qty: 1/2, thinly sliced
+    - name: Kalamata olives
+      qty: 1/2 cup
+    - name: Feta cheese
+      qty: 1 cup, crumbled
+    - name: Olive oil
+      qty: 1/4 cup
+    - name: Red wine vinegar
+      qty: 2 tablespoons
+    - name: Oregano
+      qty: 1 teaspoon
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+  steps:
+    - step: In a large bowl, combine the cucumber, tomatoes, red onion, and olives.
+    - step:
+        In a small bowl, whisk together the olive oil, red wine vinegar, oregano,
+        salt, and pepper.
+    - step: Pour the dressing over the salad and toss to combine.
+    - step: Sprinkle the crumbled feta cheese on top before serving.
+  notes: Serve chilled for best flavor.
+- title: Chicken Parmesan
+  estimated_cooking_time: 45 minutes
+  serves: 4
+  ingredients:
+    - name: Chicken breasts
+      qty: "4"
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+    - name: Flour
+      qty: 1/2 cup
+    - name: Eggs
+      qty: 2, beaten
+    - name: Breadcrumbs
+      qty: 1 cup
+    - name: Olive oil
+      qty: 1/4 cup
+    - name: Marinara sauce
+      qty: 2 cups
+    - name: Mozzarella cheese
+      qty: 1 cup, shredded
+    - name: Parmesan cheese
+      qty: 1/2 cup, grated
+    - name: Fresh basil
+      qty: for garnish
+  steps:
+    - step: "Preheat the oven to 375\xB0F (190\xB0C)."
+    - step: Season the chicken breasts with salt and pepper.
+    - step: Dredge the chicken in flour, dip in beaten eggs, and coat with breadcrumbs.
+    - step: Heat olive oil in a large pan over medium-high heat.
+    - step: Fry the chicken until golden brown on both sides.
+    - step:
+        Place the chicken in a baking dish, top with marinara sauce, mozzarella,
+        and Parmesan.
+    - step: Bake for 20 minutes, until the cheese is melted and bubbly.
+    - step: Garnish with fresh basil before serving.
+  notes: Serve with pasta or a side salad.
+- title: Margarita Pizza
+  estimated_cooking_time: 30 minutes
+  serves: 4
+  ingredients:
+    - name: Pizza dough
+      qty: 1 ball
+    - name: Olive oil
+      qty: 2 tablespoons
+    - name: Tomato sauce
+      qty: 1/2 cup
+    - name: Fresh mozzarella
+      qty: 1 ball, sliced
+    - name: Fresh basil
+      qty: 1 bunch
+    - name: Salt
+      qty: to taste
+    - name: Black pepper
+      qty: to taste
+  steps:
+    - step: "Preheat the oven to 475\xB0F (245\xB0C)."
+    - step: Roll out the pizza dough on a floured surface.
+    - step: Transfer the dough to a pizza stone or baking sheet.
+    - step: Brush the dough with olive oil and spread the tomato sauce evenly.
+    - step: Top with slices of fresh mozzarella and season with salt and pepper.
+    - step: Bake for 10-12 minutes, until the crust is golden and the cheese is bubbly.
+    - step: Garnish with fresh basil leaves before serving.
+  notes: Serve with a side of mixed greens.

@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "recipes"
+version = "0.1.0"
+description = "Recipe and meal planning softerware"
+authors = ["Phill Tornroth <famousactress@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.112.0"
+openai = "^1.38.0"
+uvicorn = "^0.30.5"
+pyyaml = "^6.0.2"
+psycopg2-binary = "^2.9.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

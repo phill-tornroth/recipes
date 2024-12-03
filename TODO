@@ -1,0 +1,11 @@
+- Update Recipe (see about using citations to have it update a recipe?)
+- Investigate audio
+
+- Figure out how to use citations?
+- Format displayed recipes nicely
+
+- Let the users know when we looked for recipes but found none, so the answer is just GPT yoloing it
+
+- After the first message consider letting it determine whether to ask for relevant recipes? Good chance it already has the important ones, right?
+
+- This is why we're setting that index variable when querying. Otherwise we run into a "bug" where the index doesn't actually map to the records https://github.com/pgvector/pgvector?tab=readme-ov-file#iterative-index-scans

@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+    volumes:
+      - ./backend/:/app
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./poetry.lock:/app/poetry.lock
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      database:
+        condition: service_healthy
+    command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+  database:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: banana_bread
+      POSTGRES_DB: recipes
+    volumes:
+      - ./database/data/:/var/lib/postgresql/data
+      - ./database/initialization/:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recipes"]
+      interval: 6s
+      timeout: 5s
+      retries: 5

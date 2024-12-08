@@ -44,9 +44,3 @@ async def read_index():
 async def chat_with_assistant(request: MessageRequest):
     response, thread_id = assistant.chat(request.message, request.thread_id)
     return MessageResponse(response=response, thread_id=thread_id)
-
-
-# @app.get("/")
-# async def root():
-#     response = assistant.chat("I'm hungry, what should I make?")
-#     return {"response": response}

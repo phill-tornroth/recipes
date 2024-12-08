@@ -1,11 +1,16 @@
-- Update Recipe (see about using citations to have it update a recipe?)
-- Investigate audio
+- Don't send "here are the recipes we found" if we didn't find any
+- Show the recipe after adding, or updating
+- Add a "show recipe" command
+  - Maybe do this in the prompt?
+  - Show Tool Use (messages for update/add recipes, etc.) ?
 
-- Figure out how to use citations?
-- Format displayed recipes nicely
+- Investigate submitting websites / urls
+- Investigate submitting images / camera photos
+- Investigate audio
 
 - Let the users know when we looked for recipes but found none, so the answer is just GPT yoloing it
 
 - After the first message consider letting it determine whether to ask for relevant recipes? Good chance it already has the important ones, right?
 
-- This is why we're setting that index variable when querying. Otherwise we run into a "bug" where the index doesn't actually map to the records https://github.com/pgvector/pgvector?tab=readme-ov-file#iterative-index-scans
+- Type hints
+- Black working

@@ -1,22 +1,19 @@
 import json
 import logging
 import os
-import uuid
 import time
+import uuid
 
 from openai import OpenAI
-import psycopg2
+from pinecone.grpc import PineconeGRPC as Pinecone
 import yaml
 
-DB_HOST = os.getenv("DB_HOST", "database")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "recipes")
-DB_USER = os.getenv("DB_USER", "recipe_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "bananabread")
+logging.basicConfig(level=logging.INFO)
 
-conn = psycopg2.connect(
-    host=DB_HOST, port=DB_PORT, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD
-)
+USER_ID = "1"  # Not worrying about tenants for now
+
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+index = pc.Index("recipes1")
 
 assistant_prompt = """You're a helpful assistant who keeps track of recipes 
     for your users and helps them meal plan or cook."""
@@ -48,7 +45,7 @@ def chat(message, thread_id=None):
         thread = openai_client.beta.threads.create()
 
     # TODO: Not supporting attachments / images yet
-    system_context_message = build_system_context_message_if_approprate(
+    system_context_message = build_system_context_message_if_appropriate(
         message, first_message=thread_id is None
     )
     if system_context_message:
@@ -62,6 +59,10 @@ def chat(message, thread_id=None):
         thread_id=thread.id,
         role="user",
         content=message,
+    )
+
+    logging.info(
+        f"Updating conversation with messages: {system_context_message}\n {message}"
     )
 
     last_run = openai_client.beta.threads.runs.create(
@@ -90,8 +91,9 @@ def chat(message, thread_id=None):
                                 "output": json.dumps("{status: 'success'}"),
                             }
                         )
+                        logging.info(f"add_recipe called with {attributes}")
                     except:
-                        # we just tell openAi we couldn't :)
+                        # we just tell openAI we couldn't :)
                         logging.exception("Tool call failed")
                         tool_outputs.append(
                             {
@@ -99,10 +101,11 @@ def chat(message, thread_id=None):
                                 "output": f"Error in function call add_recipe with arguments {tool.function.arguments}",
                             }
                         )
-                        print(tool_outputs[-1])
+                        logging.exception(f"Tool call failed - {tool_outputs[-1]}")
                 elif tool.function.name == "update_recipe":
                     try:
                         attributes = json.loads(tool.function.arguments)
+                        logging.info(f"update_recipe called with {attributes}")
                         update_recipe(
                             attributes["recipe_id"], attributes["recipe_yaml"]
                         )
@@ -114,14 +117,13 @@ def chat(message, thread_id=None):
                         )
                     except:
                         # we just tell openAi we couldn't :)
-                        logging.exception("Tool call failed")
                         tool_outputs.append(
                             {
                                 "tool_call_id": tool.id,
-                                "output": f"Error in function call add_recipe with arguments {tool.function.arguments}",
+                                "output": f"Error in function call update_recipe with arguments {tool.function.arguments}",
                             }
                         )
-                        print(tool_outputs[-1])
+                        logging.exception(f"Tool call failed - {tool_outputs[-1]}")
                 else:
                     tool_outputs.append(
                         {
@@ -129,7 +131,9 @@ def chat(message, thread_id=None):
                             "output": json.dumps("{status: 'unsupported'}"),
                         }
                     )
-                    print(f"unexpected function call: {tool.function.name}... ignoring")
+                    logging.error(
+                        f"unexpected function call: {tool.function.name}... ignoring"
+                    )
 
             last_run = openai_client.beta.threads.runs.submit_tool_outputs(
                 thread_id=thread.id, run_id=last_run.id, tool_outputs=tool_outputs
@@ -142,6 +146,7 @@ def chat(message, thread_id=None):
                 thread.id, limit=4
             )
             response = thread_messages.data[0].content[0].text.value
+            logging.info(f"Assistant response: {response} - thread_id: {thread.id}")
             return response, thread.id
         else:
             return (
@@ -151,14 +156,12 @@ def chat(message, thread_id=None):
             )
 
 
-def build_system_context_message_if_approprate(user_query, first_message=False):
+def build_system_context_message_if_appropriate(user_query, first_message=False):
     # For now we'll just always do it
     query_embedding = get_embeddings(user_query)
     recipes = find_relevant_recipes(query_embedding, top_k=5)
-    recipe_context = "\n\n".join(
-        [f"Recipe ID: {rec[0]}\nContents: {rec[2]}" for rec in recipes]
-    )
-    print(f"Found {len(recipes)} relevant recipes: \n{recipe_context}")
+    recipe_context = "\n\n".join([recipe for recipe in recipes])
+    logging.info(f"Found {len(recipes)} relevant recipes: \n{recipe_context}")
 
     return f"""
     You are a helpful assistant specializing in recipes.
@@ -171,53 +174,29 @@ def build_system_context_message_if_approprate(user_query, first_message=False):
     """
 
 
-def get_embeddings(contents):
+def get_embeddings(contents) -> list:
     response = openai_client.embeddings.create(input=contents, model=EMBEDDINGS_MODEL)
-    embedding = response.data[0].embedding
-    print(f"Got embedding for '{contents}': \n{embedding}")
-    return embedding
+    embeddings = [record.embedding for record in response.data]
+    return embeddings
 
 
 def find_relevant_recipes(query_embedding, top_k=5):
-    with conn.cursor() as cur:
-        print(f"Querying with embeddings: {query_embedding}")
-        cur.execute(
-            """
-            SET ivfflat.iterative_scan = relaxed_order;
-            SELECT
-                id,
-                user_id,
-                contents,
-                embedding <=> %s::vector AS distance
-            FROM
-                recipes
-            ORDER BY
-                distance ASC
-            LIMIT %s;
-        """,
-            (query_embedding, top_k),
-        )
-        results = cur.fetchall()
+    query_results = index.query(
+        namespace=f"user_{USER_ID}",
+        vector=query_embedding[0],
+        top_k=top_k,
+        include_values=False,
+        include_metadata=True,
+    )
+
+    results = [result.metadata["contents"] for result in query_results.matches]
+
     return results
 
 
 def add_recipe(recipe_yaml):
-
-    recipe_data = yaml.safe_load(recipe_yaml)
-    yaml_string = yaml.dump(recipe_data)
-    embeddings = get_embeddings(yaml_string)
-
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO recipes (user_id, contents, embedding)
-            VALUES (%s, %s, %s)
-            RETURNING id;
-        """,
-            (1, yaml_string, embeddings),
-        )
-        recipe_id = cur.fetchone()[0]
-    conn.commit()
+    recipe_id = str(uuid.uuid4())
+    update_recipe(recipe_id, recipe_yaml)
     return recipe_id
 
 
@@ -227,14 +206,19 @@ def update_recipe(recipe_id, recipe_yaml):
     yaml_string = yaml.dump(recipe_data)
     embeddings = get_embeddings(yaml_string)
 
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            UPDATE recipes
-            SET contents = %s, embedding = %s
-            WHERE id = %s;  
-        """,
-            (yaml_string, embeddings, recipe_id),
-        )
-    conn.commit()
+    index.upsert(
+        vectors=[
+            {
+                "id": recipe_id,
+                "values": embeddings[
+                    0
+                ],  # TODO: Understand why we're only using the first one
+                "metadata": {
+                    "contents": yaml_string,
+                },
+            },
+        ],
+        namespace=f"user_{USER_ID}",
+    )
+
     return recipe_id

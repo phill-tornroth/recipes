@@ -27,7 +27,6 @@ def get_prompt(
 
 
 def format_conversation_history(conversation_history: List[dict]) -> str:
-    print(f"context: {type(conversation_history)} -- {conversation_history}")
     return "\n\n".join(
         f"{message['role']}: {message['content']}" for message in conversation_history
     )

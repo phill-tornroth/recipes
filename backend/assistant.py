@@ -1,8 +1,16 @@
+import base64
 import json
 import logging
 import os
+import re
 from typing import List
 import uuid
+
+import requests
+from bs4 import BeautifulSoup
+from io import BytesIO
+from PIL import Image
+import math
 
 from openai import OpenAI
 from pinecone.grpc import PineconeGRPC as Pinecone
@@ -95,10 +103,19 @@ async def chat(
     else:
         thread = get_conversation(db, thread_id)
 
-    # Upload the attachment if it exists
-    # if attachment:
-    #     attachment_content = await attachment.read()
-    #     args["attachments"] = [llm.Attachment(file=attachment_content)]
+    user_message = process_text_with_urls(user_message)
+    user_message_content = user_message
+
+    if attachment:
+        image_bytes = await attachment.read()
+        encoded_string = normalize_image_to_base64_jpeg(image_bytes)
+        user_message_content = [
+            {"type": "text", "text": user_message},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{encoded_string}"},
+            },
+        ]
 
     prompt = get_prompt(
         get_conversation_contents(thread),
@@ -107,7 +124,7 @@ async def chat(
     )
     messages = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": user_message},
+        {"role": "user", "content": user_message_content},
     ]
 
     completion = openai_client.chat.completions.create(
@@ -160,6 +177,39 @@ async def chat(
     return response, thread_id
 
 
+def normalize_image_to_base64_jpeg(file_contents):
+    # Open the PNG image from the file handle
+    with Image.open(BytesIO(file_contents)) as img:
+        # Ensure the image is in RGB mode (JPEG does not support transparency)
+        img = img.convert("RGB")
+
+        # Get current dimensions
+        width, height = img.size
+
+        # Resize to fit within 768px on the shorter side, preserving aspect ratio
+        if min(width, height) > 768:
+            scale_factor = 768 / min(width, height)
+            new_width = int(width * scale_factor)
+            new_height = int(height * scale_factor)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # Ensure both dimensions are divisible by 512 for tiling
+        width, height = img.size
+        new_width = math.ceil(width / 512) * 512
+        new_height = math.ceil(height / 512) * 512
+        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+        # Save the image as JPEG to a BytesIO stream
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG", optimize=True, quality=85)
+        buffer.seek(0)
+
+        # Convert the JPEG bytes to a base64 string
+        base64_string = base64.b64encode(buffer.read()).decode("utf-8")
+
+        return base64_string
+
+
 def get_embeddings(contents) -> list:
     response = openai_client.embeddings.create(input=contents, model=EMBEDDINGS_MODEL)
     embeddings = [record.embedding for record in response.data]
@@ -179,6 +229,89 @@ def find_relevant_recipes(user_query, top_k=5) -> List[str]:
     results = [result.metadata["contents"] for result in query_results.matches]
 
     return results
+
+
+def extract_url(url: str) -> str:
+    """
+    Fetches the content from a recipe website URL and extracts the main text content.
+
+    Args:
+        url (str): The URL of the recipe page.
+
+    Returns:
+        str: The extracted recipe text, or an error message if extraction fails.
+    """
+    try:
+        # Spoofing User-Agent to mimic a real browser
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+            )
+        }
+
+        # Fetch the webpage
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()  # Raise an error for unsuccessful requests
+
+        # Parse the HTML
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        # Try to find the recipe content based on common HTML structures
+        # 1. Look for schema.org metadata
+        recipe_schema = soup.find("script", type="application/ld+json")
+        if recipe_schema:
+            print(f"Schema: {recipe_schema.string}")
+            import json
+
+            schema_data = json.loads(recipe_schema.string)
+            if isinstance(schema_data, dict) and schema_data.get("@type") == "Recipe":
+                return schema_data.get(
+                    "recipeInstructions", "Recipe instructions not found."
+                )
+
+        # 2. Fallback to common HTML elements for recipes
+        main_content = soup.find(class_="recipe-content") or soup.find(id="recipe")
+        if main_content:
+            main_contents = main_content.get_text(strip=True)
+            if main_contents:
+                print(f"Main Contents: {main_contents}")
+                return main_contents
+
+        # 3. If no specific structure is found, return the page's visible text
+        return soup.get_text(strip=True)
+
+    except Exception as e:
+        return f"An error occurred while processing the URL: {str(e)}"
+
+
+def process_text_with_urls(text: str) -> str:
+    """
+    Detects URLs in the text, extracts their content, and appends it next to the URL.
+
+    Args:
+        text (str): The input text containing URLs.
+
+    Returns:
+        str: The text with extracted content appended next to URLs.
+    """
+    print(f"Extracting!: {text}")
+    # Regular expression to detect URLs
+    url_pattern = re.compile(r"(https?://[^\s]+)")
+
+    # Find all URLs in the text
+    urls = re.findall(url_pattern, text)
+
+    for url in urls:
+        print(f"URL: {url}")
+        # Extract content for each URL
+        extracted_content = extract_url(url)
+
+        # Append the extracted content next to the URL in the text
+        text = text.replace(url, f"{url} (Extracted Content: {extracted_content})")
+        print(f"PROCESSED: {text}")
+
+    return text
 
 
 def add_recipe(recipe_yaml: str) -> str:

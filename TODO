@@ -1,8 +1,9 @@
 Foundational:
 
+DONE - Support attachments (images with recipes in them)
+DONE - Support URLs (links to recipe sites)
+
 - Respect text/token limits in conversation history
-- Support attachments (images with recipes in them)
-- Support URLs (links to recipe sites)
 
 Optimizations / UX:
 
@@ -12,8 +13,10 @@ Optimizations / UX:
 - Handle text-to-speech output
 - Optimize redundant recipes in context window
 - Better Mobile UX
+- Improve URL extraction (it's pretty janky)
 
 Technical
 
+- async cleanup
 - Enforce type hints (and apply them more completely)
 - Get black working

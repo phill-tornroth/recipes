@@ -51,7 +51,13 @@ body {
 
 #input-container {
     display: flex;
+    align-items: center;
     padding: 10px;
+    border-top: 1px solid #ccc;
+}
+
+#image-upload {
+    margin-right: 10px;
 }
 
 #user-input {

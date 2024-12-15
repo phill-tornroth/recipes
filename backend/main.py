@@ -1,13 +1,16 @@
 import os
+import json
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy.orm import Session
 
-import assistant
+from assistant import chat
+from storage.dependencies import get_db
 
 app = FastAPI()
 
@@ -23,7 +26,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-class MessageRequest(BaseModel):
+class MessagePayload(BaseModel):
     message: str
     thread_id: Optional[str] = None
 
@@ -41,6 +44,21 @@ async def read_index():
 
 
 @app.post("/chat", response_model=MessageResponse)
-async def chat_with_assistant(request: MessageRequest):
-    response, thread_id = assistant.chat(request.message, request.thread_id)
-    return MessageResponse(response=response, thread_id=thread_id)
+async def chat_with_assistant(
+    message: str = Form(...),
+    attachment: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+):
+    try:
+        message_data = json.loads(message)
+        payload = MessagePayload(**message_data)
+    except (json.JSONDecodeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    user_message = payload.message
+    thread_id = payload.thread_id
+
+    # Call the chat function with the message and attachment
+    response, new_thread_id = await chat(db, user_message, thread_id, attachment)
+    db.commit()
+    return MessageResponse(response=response, thread_id=new_thread_id)

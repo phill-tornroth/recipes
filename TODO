@@ -1,16 +1,19 @@
-- Don't send "here are the recipes we found" if we didn't find any
-- Show the recipe after adding, or updating
-- Add a "show recipe" command
-  - Maybe do this in the prompt?
-  - Show Tool Use (messages for update/add recipes, etc.) ?
+Foundational:
 
-- Investigate submitting websites / urls
-- Investigate submitting images / camera photos
-- Investigate audio
+- Respect text/token limits in conversation history
+- Support attachments (images with recipes in them)
+- Support URLs (links to recipe sites)
 
-- Let the users know when we looked for recipes but found none, so the answer is just GPT yoloing it
+Optimizations / UX:
 
-- After the first message consider letting it determine whether to ask for relevant recipes? Good chance it already has the important ones, right?
+- Handle "no relevant recipes" well
+- Show tool use - recipe addition/update (maybe with recipe contents)
+- Handle speech-to-text input
+- Handle text-to-speech output
+- Optimize redundant recipes in context window
+- Better Mobile UX
 
-- Type hints
-- Black working
+Technical
+
+- Enforce type hints (and apply them more completely)
+- Get black working

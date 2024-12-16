@@ -20,6 +20,8 @@ from fastapi import UploadFile
 from typing import Optional, Tuple
 
 from prompts import get_prompt
+
+from utils.tokens import get_tokens
 from storage.conversations import (
     ConversationUpsert,
     upsert_conversation,
@@ -36,11 +38,9 @@ USER_ID = "1d7bec80-9ea3-4359-8707-2fffd74a925a"  # Not worrying about tenants f
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index("recipes1")
 
-assistant_prompt = """You're a helpful assistant who keeps track of recipes 
-    for your users and helps them meal plan or cook."""
-
 openai_client = OpenAI()
 model = "gpt-4o"
+MAX_TOKENS = 128000
 
 TOOLS = [
     {
@@ -120,7 +120,7 @@ async def chat(
     prompt = get_prompt(
         get_conversation_contents(thread),
         find_relevant_recipes(user_message),
-        user_message,
+        max_tokens=MAX_TOKENS - len(get_tokens(json.dumps(user_message_content))),
     )
     messages = [
         {"role": "system", "content": prompt},

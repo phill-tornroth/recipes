@@ -2,8 +2,10 @@ Foundational:
 
 DONE - Support attachments (images with recipes in them)
 DONE - Support URLs (links to recipe sites)
+DONE - Respect text/token limits in conversation history
 
-- Respect text/token limits in conversation history
+- Also check and decide what to do about image content in history
+  - Part of the problem is that the UI form will re-upload currently
 
 Optimizations / UX:
 
@@ -17,6 +19,7 @@ Optimizations / UX:
 
 Technical
 
+- TPM rate limits - not sure what I can do about it but 3k/minute for current 4o is pretty limiting :)
 - async cleanup
 - Enforce type hints (and apply them more completely)
 - Get black working

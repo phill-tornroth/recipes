@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const userInput = document.getElementById("user-input");
   const sendButton = document.getElementById("send-button");
   const imageUpload = document.getElementById("image-upload");
+  const imageUploadButton = document.getElementById("image-upload-button");
 
   let threadId = null;
   let loadingIndicator = null;
@@ -17,34 +18,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function appendImage(imageUrl, className) {
+    const imageContainer = document.createElement("div");
+    imageContainer.className = `message ${className}`;
     const imageElement = document.createElement("img");
-    imageElement.className = `message ${className}`;
     imageElement.src = imageUrl;
-    responsePane.appendChild(imageElement);
+    imageElement.alt = "Uploaded Image";
+    imageElement.style.maxWidth = "100%";
+    imageContainer.appendChild(imageElement);
+    responsePane.appendChild(imageContainer);
     responsePane.scrollTop = responsePane.scrollHeight; // Scroll to the bottom
   }
 
   function showLoadingIndicator() {
-    if (!loadingIndicator) {
-      loadingIndicator = document.createElement("div");
-      loadingIndicator.id = "loading-indicator";
-      loadingIndicator.innerHTML = '<div class="spinner"></div>';
-      responsePane.appendChild(loadingIndicator);
-      responsePane.scrollTop = responsePane.scrollHeight; // Scroll to the bottom
-    }
+    const spinner = document.getElementById("spinner");
+    spinner.style.display = "block";
   }
 
   function hideLoadingIndicator() {
-    if (loadingIndicator) {
-      responsePane.removeChild(loadingIndicator);
-      loadingIndicator = null;
-    }
+    const spinner = document.getElementById("spinner");
+    spinner.style.display = "none";
   }
 
   async function sendMessage() {
     const message = userInput.value.trim();
     if (message || selectedFile) {
-      appendMessage(message, "user-message");
+      if (message) {
+        appendMessage(message, "user-message");
+      }
+      if (selectedFile) {
+        // Optionally, you can display the image in the chat before sending
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          appendImage(e.target.result, "user-image");
+        };
+        reader.readAsDataURL(selectedFile);
+      }
       userInput.value = "";
       showLoadingIndicator();
 
@@ -55,28 +63,39 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       formData.append("message", jsonPayload);
       if (selectedFile) {
-        formData.append("attachment", selectedFile);
+        formData.append("attachment", selectedFile); // Fixed typo here
       }
 
-      // Send message to the backend
-      const response = await fetch("/chat", {
-        method: "POST",
-        body: formData,
-      });
+      try {
+        // Send message to the backend
+        const response = await fetch("/chat", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        console.error("Failed to send message", response.statusText);
+        if (!response.ok) {
+          console.error("Failed to send message", response.statusText);
+          hideLoadingIndicator();
+          return;
+        }
+
+        const data = await response.json();
+        threadId = data.thread_id; // Store the thread_id for future messages
+        appendMessage(data.response, "bot-message");
+      } catch (error) {
+        console.error("Error sending message:", error);
+      } finally {
         hideLoadingIndicator();
-        return;
+        selectedFile = null; // Reset the selected file after sending
+        imageUpload.value = ""; // Reset the file input
       }
-
-      const data = await response.json();
-      threadId = data.thread_id; // Store the thread_id for future messages
-      appendMessage(data.response, "bot-message");
-      hideLoadingIndicator();
-      selectedFile = null; // Reset the selected file after sending
     }
   }
+
+  // Trigger the hidden file input when the button is clicked
+  imageUploadButton.addEventListener("click", () => {
+    imageUpload.click();
+  });
 
   imageUpload.addEventListener("change", (event) => {
     const file = event.target.files[0];
@@ -91,4 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   sendButton.addEventListener("click", sendMessage);
+
+  // Optionally, allow sending the message by pressing Enter
+  userInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
 });

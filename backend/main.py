@@ -3,7 +3,7 @@ import json
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
@@ -41,6 +41,11 @@ async def read_index():
     with open(os.path.join("static", "index.html"), "r") as file:
         html_content = file.read()
     return HTMLResponse(content=html_content, status_code=200)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(os.path.join("static", "favicon.ico"))
 
 
 @app.post("/chat", response_model=MessageResponse)

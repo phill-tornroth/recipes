@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <!-- Carrot Body -->
+    <polygon points="32,4 12,60 52,60" fill="#FFA500" stroke="#FF8C00" stroke-width="2" />
+
+    <!-- Carrot Leaves -->
+    <path d="M32,4 C30,0 28,0 26,4 C24,0 22,0 20,4 C18,0 16,0 14,4" fill="#228B22" stroke="#006400"
+        stroke-width="2" />
+    <path d="M32,4 C34,0 36,0 38,4 C40,0 42,0 44,4 C46,0 48,0 50,4" fill="#228B22" stroke="#006400"
+        stroke-width="2" />
+</svg>

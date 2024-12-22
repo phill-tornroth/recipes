@@ -11,10 +11,15 @@
 <body>
     <div id="app">
         <div id="chat-container">
-            <div id="response-pane"></div>
+            <div id="response-pane">
+                <div id="spinner" class="spinner" style="display: none;"></div>
+            </div>
             <div id="input-container">
+                <button id="image-upload-button" aria-label="Upload Image">
+                    <img src="/static/upload-icon.png" alt="Upload" />
+                </button>
+                <input type="file" id="image-upload" accept="image/*" />
                 <input type="text" id="user-input" placeholder="Type your message here..." />
-                <input type="file" id="image-upload" accept="image/*">
                 <button id="send-button">Send</button>
             </div>
         </div>
@@ -22,5 +27,4 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/app.js"></script>
 </body>
-
 </html>

@@ -9,6 +9,7 @@ DONE - Respect text/token limits in conversation history
 
 Optimizations / UX:
 
+- For desktop UX maybe second-pane the relevant recipe up on the side of the chat history?
 - Handle "no relevant recipes" well
 - Show tool use - recipe addition/update (maybe with recipe contents)
 - Handle speech-to-text input
@@ -17,9 +18,12 @@ Optimizations / UX:
 - Better Mobile UX
 - Improve URL extraction (it's pretty janky)
 
+- Recipe archival?
+
 Technical
 
-- TPM rate limits - not sure what I can do about it but 3k/minute for current 4o is pretty limiting :)
-- async cleanup
+- TPM rate limits - not sure what I can do about it but 3k/minute for current 4o is pretty limiting
+- async io cleanup
 - Enforce type hints (and apply them more completely)
 - Get black working
+- Get prettier working

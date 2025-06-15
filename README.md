@@ -24,7 +24,23 @@ Welcome to the Recipes Project! This project aims to provide a collection of del
 
 ## Installation
 
-### Environment Setup
+### Quick Setup
+
+For a complete development environment setup, run:
+
+```sh
+./setup.sh
+```
+
+This script will:
+- Create `.env` file from template
+- Install Python and Node.js dependencies
+- Set up pre-commit hooks
+- Provide next steps
+
+### Manual Setup
+
+#### Environment Setup
 
 1. Copy the example environment file:
 ```sh
@@ -70,6 +86,94 @@ docker-compose up --build
 ```
 
 **Note:** Make sure you have set up your `.env` file with valid API keys before running the project.
+
+## Development
+
+### Development Dependencies
+
+Install development dependencies:
+
+```sh
+make install-dev
+```
+
+### Code Quality Tools
+
+Format code:
+```sh
+make format
+```
+
+Run linting:
+```sh
+make lint
+```
+
+Run tests:
+```sh
+make test
+```
+
+Run tests with coverage:
+```sh
+make test-cov
+```
+
+Run all checks:
+```sh
+make check-all
+```
+
+### Pre-commit Hooks
+
+Set up pre-commit hooks to automatically format and lint code:
+
+```sh
+make setup-pre-commit
+```
+
+### Frontend Development
+
+Install Node.js dependencies:
+```sh
+npm install
+```
+
+Format frontend code:
+```sh
+npm run format
+```
+
+Lint frontend code:
+```sh
+npm run lint
+```
+
+### Available Make Commands
+
+Run `make help` to see all available commands.
+
+### VSCode/Cursor Setup
+
+The project includes VSCode/Cursor configuration for seamless development:
+
+1. **Install recommended extensions** - VSCode will prompt you to install recommended extensions when you open the project
+2. **Format on save** - Black and Prettier will automatically format your code when you save
+3. **Integrated linting** - Flake8, mypy, and ESLint will show errors and warnings inline
+4. **Debugging** - Pre-configured debug configurations for FastAPI and tests
+5. **Tasks** - Use Ctrl/Cmd+Shift+P → "Tasks: Run Task" to access:
+   - Format Python Code
+   - Lint Python Code  
+   - Run Tests
+   - Run Tests with Coverage
+   - Check All
+   - Start Development Server
+   - Docker: Build and Up
+
+**Key shortcuts:**
+- `Ctrl/Cmd+Shift+P` → "Python: Select Interpreter" → Choose `.venv/bin/python`
+- `F5` - Start debugging FastAPI server
+- `Ctrl/Cmd+Shift+P` → "Tasks: Run Task" - Access development tasks
 
 ## Usage
 

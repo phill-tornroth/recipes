@@ -1,0 +1,17 @@
+{
+  "name": "recipes",
+  "version": "0.1.0",
+  "description": "Recipe and meal planning software",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write backend/static/**/*.{js,html,css}",
+    "format-check": "prettier --check backend/static/**/*.{js,html,css}",
+    "lint": "eslint backend/static/**/*.js",
+    "lint-fix": "eslint backend/static/**/*.js --fix"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0"
+  }
+}

@@ -3,6 +3,15 @@ database/data/
 *.db
 *.sqlite*
 
+# Development tools
+htmlcov/
+.coverage
+.pytest_cache/
+.mypy_cache/
+node_modules/
+package-lock.json
+*.log
+
 # Bleh
 .DS_Store
 Thumbs.db

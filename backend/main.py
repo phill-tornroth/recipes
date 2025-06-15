@@ -41,14 +41,14 @@ class MessageResponse(BaseModel):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def read_index():
+async def read_index() -> HTMLResponse:
     with open(os.path.join("static", "index.html"), "r") as file:
         html_content = file.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 
 @app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+async def favicon() -> FileResponse:
     return FileResponse(os.path.join("static", "favicon.ico"))
 
 
@@ -57,7 +57,7 @@ async def chat_with_assistant(
     message: str = Form(...),
     attachment: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
-):
+) -> MessageResponse:
     try:
         message_data = json.loads(message)
         payload = MessagePayload(**message_data)

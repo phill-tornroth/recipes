@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import List
+from typing import List, Dict, Any
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -37,7 +37,7 @@ def upsert_conversation(
 ) -> Conversation:
     if conversation_data.id:
         conversation = get_conversation(db, conversation_data.id)
-        if conversation_data.contents:
+        if conversation and conversation_data.contents:
             conversation.contents = conversation_data.contents
     else:
         conversation = Conversation(
@@ -47,19 +47,33 @@ def upsert_conversation(
             contents=conversation_data.contents,
         )
         db.add(conversation)
+    
+    if conversation is None:
+        # Create new conversation if not found
+        conversation = Conversation(
+            id=conversation_data.id or uuid.uuid4(),
+            user_id=conversation_data.user_id,
+            start_time=conversation_data.start_time,
+            contents=conversation_data.contents,
+        )
+        db.add(conversation)
+    
     db.commit()
     db.refresh(conversation)
     return conversation
 
 
-def get_conversation_contents(conversation: Conversation) -> List[dict]:
-    return json.loads(conversation.contents) if conversation.contents else []
+def get_conversation_contents(conversation: Conversation) -> List[Dict[str, Any]]:
+    contents_str = str(conversation.contents) if conversation.contents else ""
+    return json.loads(contents_str) if contents_str else []
 
 
 def update_conversation_contents(
-    conversation: Conversation, messages: List[dict]
+    conversation: Conversation, messages: List[Dict[str, Any]]
 ) -> None:
-    if conversation.contents:
-        messages = json.loads(conversation.contents) + messages
+    existing_contents = str(conversation.contents) if conversation.contents else ""
+    if existing_contents:
+        existing_messages = json.loads(existing_contents)
+        messages = existing_messages + messages
 
-    conversation.contents = json.dumps(messages)
+    conversation.contents = json.dumps(messages)  # type: ignore

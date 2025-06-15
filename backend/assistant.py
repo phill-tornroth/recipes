@@ -2,7 +2,7 @@ import base64
 import json
 import logging
 import re
-from typing import List
+from typing import List, Dict, Any, Union
 import uuid
 
 import requests
@@ -15,7 +15,7 @@ from openai import OpenAI
 from pinecone.grpc import PineconeGRPC as Pinecone
 from sqlalchemy.orm import Session
 import yaml
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from typing import Optional, Tuple
 
 from config import config
@@ -30,10 +30,15 @@ from storage.conversations import (
     update_conversation_contents,
 )
 
+# Type aliases for better readability
+MessageContent = Union[str, List[Dict[str, Any]]]
+ConversationMessage = Dict[str, Any]
+RecipeData = Dict[str, Any]
+
 logging.basicConfig(level=getattr(logging, config.LOG_LEVEL.upper()))
 
 
-USER_ID = "1d7bec80-9ea3-4359-8707-2fffd74a925a"  # Not worrying about tenants for now
+USER_ID = uuid.UUID("1d7bec80-9ea3-4359-8707-2fffd74a925a")  # Not worrying about tenants for now
 
 pc = Pinecone(api_key=config.PINECONE_API_KEY)
 index = pc.Index("recipes1")
@@ -101,10 +106,12 @@ async def chat(
         )
         thread_id = str(thread.id)
     else:
-        thread = get_conversation(db, thread_id)
+        thread = get_conversation(db, uuid.UUID(thread_id))
+        if thread is None:
+            raise HTTPException(status_code=404, detail="Conversation not found")
 
     user_message = process_text_with_urls(user_message)
-    user_message_content = user_message
+    user_message_content: MessageContent = user_message
 
     if attachment:
         image_bytes = await attachment.read()
@@ -127,10 +134,10 @@ async def chat(
         {"role": "user", "content": user_message_content},
     ]
 
-    completion = openai_client.chat.completions.create(
+    completion = openai_client.chat.completions.create(  # type: ignore
         model=model,
-        messages=messages,
-        tools=TOOLS,
+        messages=messages,  # type: ignore
+        tools=TOOLS,  # type: ignore
     )
 
     tool_calls = completion.choices[0].message.tool_calls
@@ -156,28 +163,28 @@ async def chat(
                     }
                 )
 
-        completion = openai_client.chat.completions.create(
+        completion = openai_client.chat.completions.create(  # type: ignore
             model=model,
-            messages=messages,
+            messages=messages,  # type: ignore
         )
 
-    response = completion.choices[0].message.content
+    response = completion.choices[0].message.content or "No response generated"
 
     # Update the conversation with relevant messages
 
-    user_message = messages[1]
-    assistant_message = completion.choices[0].message.to_dict()
+    user_message_dict = messages[1]  # type: ignore
+    assistant_message_dict = completion.choices[0].message.to_dict()
 
     conversation_update_messages = [
-        {"role": m["role"], "content": m["content"]}
-        for m in [user_message, assistant_message]
+        {"role": user_message_dict["role"], "content": user_message_dict["content"]},  # type: ignore
+        {"role": assistant_message_dict["role"], "content": assistant_message_dict["content"]}
     ]
     update_conversation_contents(thread, conversation_update_messages)
 
     return response, thread_id
 
 
-def normalize_image_to_base64_jpeg(file_contents):
+def normalize_image_to_base64_jpeg(file_contents: bytes) -> str:
     # Open the PNG image from the file handle
     with Image.open(BytesIO(file_contents)) as img:
         # Ensure the image is in RGB mode (JPEG does not support transparency)
@@ -210,13 +217,13 @@ def normalize_image_to_base64_jpeg(file_contents):
         return base64_string
 
 
-def get_embeddings(contents) -> list:
+def get_embeddings(contents: str) -> List[List[float]]:
     response = openai_client.embeddings.create(input=contents, model=EMBEDDINGS_MODEL)
     embeddings = [record.embedding for record in response.data]
     return embeddings
 
 
-def find_relevant_recipes(user_query, top_k=5) -> List[str]:
+def find_relevant_recipes(user_query: str, top_k: int = 5) -> List[str]:
     query_embedding = get_embeddings(user_query)
     query_results = index.query(
         namespace=f"user_{USER_ID}",

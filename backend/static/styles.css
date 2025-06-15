@@ -5,7 +5,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f0f0f0;
 }
 
@@ -17,13 +17,15 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    height: 80vh;
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 #chat-container {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
 }
 
 #response-pane {
@@ -31,6 +33,7 @@ body {
     overflow-y: auto;
     padding: 10px;
     border-bottom: 1px solid #ccc;
+    margin-bottom: 60px; /* Space for input container */
 }
 
 .message {
@@ -54,6 +57,14 @@ body {
     align-items: center;
     padding: 10px;
     border-top: 1px solid #ccc;
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 #image-upload {
@@ -71,6 +82,64 @@ body {
 #image-upload-button img {
     width: 24px;
     height: 24px;
+}
+
+#mic-button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-right: 10px;
+    cursor: pointer;
+    position: relative;
+}
+
+#mic-button img {
+    width: 24px;
+    height: 24px;
+}
+
+#mic-button.recording {
+    animation: pulse 1.5s infinite;
+}
+
+#mic-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#mic-button .tooltip {
+    visibility: hidden;
+    width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#mic-button:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 #user-input {
@@ -123,4 +192,13 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border-left: 4px solid #c62828;
 }

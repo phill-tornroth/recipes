@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Dict, Any, Optional
 import os
 
 from utils.tokens import get_tokens
 
-prompt_template = None
+prompt_template: Optional[str] = None
 
 
 def _get_prompt_template() -> str:
@@ -18,7 +18,7 @@ def _get_prompt_template() -> str:
 
 
 def get_prompt(
-    conversation_history: List[dict],
+    conversation_history: List[Dict[str, Any]],
     relevant_recipes: List[str],
     max_tokens: int = 100000,
 ) -> str:
@@ -36,7 +36,7 @@ def get_prompt(
 
 
 def format_conversation_history(
-    conversation_history: List[dict], max_tokens: int = 50000
+    conversation_history: List[Dict[str, Any]], max_tokens: int = 50000
 ) -> str:
     result = "\n\n".join(
         f"{message['role']}: {message['content']}" for message in conversation_history

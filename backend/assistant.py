@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-import os
 import re
 from typing import List
 import uuid
@@ -19,6 +18,7 @@ import yaml
 from fastapi import UploadFile
 from typing import Optional, Tuple
 
+from config import config
 from prompts import get_prompt
 
 from utils.tokens import get_tokens
@@ -30,15 +30,15 @@ from storage.conversations import (
     update_conversation_contents,
 )
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=getattr(logging, config.LOG_LEVEL.upper()))
 
 
 USER_ID = "1d7bec80-9ea3-4359-8707-2fffd74a925a"  # Not worrying about tenants for now
 
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+pc = Pinecone(api_key=config.PINECONE_API_KEY)
 index = pc.Index("recipes1")
 
-openai_client = OpenAI()
+openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
 model = "gpt-4o"
 MAX_TOKENS = 128000
 

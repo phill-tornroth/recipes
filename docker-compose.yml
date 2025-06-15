@@ -9,13 +9,20 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - LOG_LEVEL=info
+      - LOG_LEVEL=${LOG_LEVEL:-info}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=recipes
+      - DB_USER=recipe_user
+      - DB_PASSWORD=bananabread
+      - HOST=${HOST:-0.0.0.0}
+      - PORT=${PORT:-8000}
     depends_on:
       database:
         condition: service_healthy
-    command: poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: poetry run uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000} --reload
   database:
     image: postgres:13
     environment:

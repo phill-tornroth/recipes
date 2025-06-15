@@ -1,5 +1,7 @@
 # custom in-repo stuff
-database/data
+database/data/
+*.db
+*.sqlite*
 
 # Bleh
 .DS_Store

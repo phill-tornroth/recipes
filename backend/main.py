@@ -9,8 +9,12 @@ from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
+from config import config
 from assistant import chat
 from storage.dependencies import get_db
+
+# Validate required environment variables on startup
+config.validate_required_vars()
 
 app = FastAPI()
 

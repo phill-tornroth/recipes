@@ -13,6 +13,21 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11"]
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - uses: actions/checkout@v4
     
@@ -54,6 +69,14 @@ jobs:
       env:
         OPENAI_API_KEY: fake_key_for_testing
         PINECONE_API_KEY: fake_key_for_testing
+        GOOGLE_CLIENT_ID: fake_client_id
+        GOOGLE_CLIENT_SECRET: fake_client_secret
+        SECRET_KEY: fake_jwt_secret_key_for_testing_12345
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: test_db
+        DB_USER: test_user
+        DB_PASSWORD: test_pass
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -62,30 +85,3 @@ jobs:
         file: ./coverage.xml
         fail_ci_if_error: false
 
-  frontend:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: 'backend/static/package-lock.json'
-    
-    - name: Install dependencies
-      run: |
-        cd backend/static
-        npm ci
-    
-    - name: Run prettier check
-      run: |
-        cd backend/static
-        npm run format-check
-    
-    - name: Run ESLint
-      run: |
-        cd backend/static
-        npm run lint

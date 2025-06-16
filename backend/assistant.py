@@ -3,7 +3,9 @@ import base64
 import json
 import logging
 import math
+import os
 import re
+import sys
 import uuid
 from io import BytesIO
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
@@ -35,10 +37,36 @@ RecipeData = Dict[str, Any]
 
 logging.basicConfig(level=getattr(logging, config.LOG_LEVEL.upper()))
 
-pc = Pinecone(api_key=config.PINECONE_API_KEY)
-index = pc.Index("recipes1")
+# Check if we're in test environment to avoid real API calls
+if os.getenv("PYTEST_CURRENT_TEST") or "pytest" in sys.modules:
+    # In test mode - use mocks
+    from unittest.mock import Mock
 
-openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+    pc = Mock()
+    index = Mock()
+    index.upsert.return_value = None
+    index.query.return_value = Mock(matches=[])
+    openai_client = Mock()
+
+    # Setup mock responses
+    mock_completion = Mock()
+    mock_completion.choices = [Mock()]
+    mock_completion.choices[0].message.content = "Test response"
+    mock_completion.choices[0].message.tool_calls = None
+    mock_completion.choices[0].message.to_dict.return_value = {
+        "role": "assistant",
+        "content": "Test response",
+    }
+    openai_client.chat.completions.create.return_value = mock_completion
+
+    mock_embedding_response = Mock()
+    mock_embedding_response.data = [Mock(embedding=[0.1] * 1536)]
+    openai_client.embeddings.create.return_value = mock_embedding_response
+else:
+    # Production mode - use real clients
+    pc = Pinecone(api_key=config.PINECONE_API_KEY)
+    index = pc.Index("recipes1")
+    openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
 model = "gpt-4o"
 MAX_TOKENS = 128000
 

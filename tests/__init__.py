@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 # Set up environment variables first
 test_env_vars = {
+    "PYTEST_CURRENT_TEST": "true",  # Signal to backend that we're in test mode
     "OPENAI_API_KEY": "test-openai-key",
     "PINECONE_API_KEY": "test-pinecone-key",
     "GOOGLE_CLIENT_ID": "test-google-client-id",

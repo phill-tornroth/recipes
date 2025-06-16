@@ -301,3 +301,61 @@ body {
 .logout-btn:hover {
     background: #e0e0e0;
 }
+
+/* Status Message Styles */
+.status-message {
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 5px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease-in;
+    border-left: 3px solid #007bff;
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.status-message.recipe-search {
+    border-left-color: #28a745;
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-message.tool-use {
+    border-left-color: #ffc107;
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-message.tool-complete {
+    border-left-color: #28a745;
+    background-color: #d4edda;
+    color: #155724;
+    animation: fadeIn 0.3s ease-in, fadeOut 0.3s ease-out 1.7s;
+}
+
+.search-icon, .tool-icon {
+    font-size: 16px;
+}
+
+.spinner-small {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-10px); }
+}

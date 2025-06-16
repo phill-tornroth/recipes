@@ -358,6 +358,48 @@ document.addEventListener("DOMContentLoaded", () => {
     spinner.style.display = "none";
   }
 
+  function showStatusMessage(message, type = 'status') {
+    // Create or update status message element
+    let statusElement = document.getElementById('status-message');
+    if (!statusElement) {
+      statusElement = document.createElement('div');
+      statusElement.id = 'status-message';
+      statusElement.className = 'status-message';
+      responsePane.appendChild(statusElement);
+    }
+    
+    // Update content based on type
+    if (type === 'recipe_search') {
+      statusElement.innerHTML = `<span class="search-icon">🔍</span> ${message}`;
+      statusElement.className = 'status-message recipe-search';
+    } else if (type === 'tool_use') {
+      statusElement.innerHTML = `<span class="tool-icon">⚙️</span> ${message}`;
+      statusElement.className = 'status-message tool-use';
+    } else if (type === 'tool_complete') {
+      statusElement.innerHTML = message;
+      statusElement.className = 'status-message tool-complete';
+      // Auto-remove tool complete messages after 2 seconds
+      setTimeout(() => {
+        if (statusElement && statusElement.parentNode) {
+          statusElement.remove();
+        }
+      }, 2000);
+      return;
+    } else {
+      statusElement.innerHTML = `<span class="spinner-small"></span> ${message}`;
+      statusElement.className = 'status-message';
+    }
+    
+    responsePane.scrollTop = responsePane.scrollHeight;
+  }
+
+  function removeStatusMessage() {
+    const statusElement = document.getElementById('status-message');
+    if (statusElement) {
+      statusElement.remove();
+    }
+  }
+
   async function sendMessage() {
     // Check if user is authenticated
     if (!currentUser) {
@@ -371,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
         appendMessage(message, "user-message");
       }
       if (selectedFile) {
-        // Optionally, you can display the image in the chat before sending
+        // Display the image in the chat before sending
         const reader = new FileReader();
         reader.onload = (e) => {
           appendImage(e.target.result, "user-image");
@@ -379,7 +421,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsDataURL(selectedFile);
       }
       userInput.value = "";
-      showLoadingIndicator();
 
       const formData = new FormData();
       const jsonPayload = JSON.stringify({
@@ -388,39 +429,123 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       formData.append("message", jsonPayload);
       if (selectedFile) {
-        formData.append("attachment", selectedFile); // Fixed typo here
+        formData.append("attachment", selectedFile);
       }
 
       try {
-        // Send message to the backend
-        const response = await fetch("/chat", {
+        // Use streaming endpoint for real-time feedback
+        const response = await fetch("/chat/stream", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
           if (response.status === 401) {
-            // Authentication failed, redirect to login
             showError("Session expired. Please login again.");
             currentUser = null;
             showAuthInterface();
           } else {
             showError(`Failed to send message: ${response.statusText}`);
           }
-          hideLoadingIndicator();
           return;
         }
 
-        const data = await response.json();
-        threadId = data.thread_id; // Store the thread_id for future messages
-        appendMessage(data.response, "bot-message");
+        // Handle streaming response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          
+          // Process complete lines, keep incomplete line in buffer
+          for (let i = 0; i < lines.length - 1; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith('data: ')) {
+              try {
+                const eventData = JSON.parse(line.slice(6));
+                handleStreamEvent(eventData);
+              } catch (e) {
+                console.error('Error parsing stream event:', e);
+              }
+            }
+          }
+          
+          buffer = lines[lines.length - 1];
+        }
+
       } catch (error) {
-        console.error("Error sending message:", error);
+        console.error("Streaming failed, falling back to regular endpoint:", error);
+        removeStatusMessage();
+        
+        // Fallback to non-streaming endpoint
+        try {
+          showLoadingIndicator();
+          const fallbackResponse = await fetch("/chat", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (fallbackResponse.ok) {
+            const data = await fallbackResponse.json();
+            threadId = data.thread_id;
+            appendMessage(data.response, "bot-message");
+          } else {
+            showError("Failed to send message. Please try again.");
+          }
+        } catch (fallbackError) {
+          console.error("Fallback also failed:", fallbackError);
+          showError("Failed to send message. Please try again.");
+        } finally {
+          hideLoadingIndicator();
+        }
       } finally {
-        hideLoadingIndicator();
-        selectedFile = null; // Reset the selected file after sending
-        imageUpload.value = ""; // Reset the file input
+        selectedFile = null;
+        imageUpload.value = "";
       }
+    }
+  }
+
+  function handleStreamEvent(event) {
+    switch (event.type) {
+      case 'status':
+        showStatusMessage(event.message, 'status');
+        break;
+        
+      case 'recipe_search':
+        showStatusMessage(event.message, 'recipe_search');
+        break;
+        
+      case 'tool_use':
+        showStatusMessage(event.message, 'tool_use');
+        break;
+        
+      case 'tool_complete':
+        showStatusMessage(event.message, 'tool_complete');
+        break;
+        
+      case 'response':
+        removeStatusMessage();
+        threadId = event.thread_id;
+        appendMessage(event.content, "bot-message");
+        break;
+        
+      case 'end':
+        removeStatusMessage();
+        break;
+        
+      case 'error':
+        removeStatusMessage();
+        showError(`Error: ${event.message}`);
+        break;
+        
+      default:
+        console.log('Unknown event type:', event.type, event);
     }
   }
 

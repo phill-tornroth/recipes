@@ -2,8 +2,9 @@ import base64
 import json
 import logging
 import re
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, AsyncGenerator
 import uuid
+import asyncio
 
 import requests
 from bs4 import BeautifulSoup
@@ -181,6 +182,183 @@ async def chat(
     update_conversation_contents(thread, conversation_update_messages)
 
     return response, thread_id
+
+
+async def chat_with_feedback(
+    db: Session,
+    user: User,
+    user_message: str,
+    thread_id: Optional[str] = None,
+    attachment: Optional[UploadFile] = None,
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """
+    Chat function that yields progress updates for real-time feedback.
+    
+    Yields events with the following structure:
+    - {'type': 'status', 'message': 'Searching your recipe database...'}
+    - {'type': 'recipe_search', 'count': 3, 'message': 'Found 3 relevant recipes'}
+    - {'type': 'tool_use', 'tool': 'add_recipe', 'message': 'Adding new recipe...'}
+    - {'type': 'response', 'content': 'Here is my response...', 'thread_id': 'abc123'}
+    """
+    
+    # Initialize the thread if it's the first message
+    yield {"type": "status", "message": "Initializing conversation..."}
+    await asyncio.sleep(0.1)  # Small delay for UI feedback
+    
+    if thread_id is None:
+        thread = upsert_conversation(
+            db, ConversationUpsert(user_id=user.id, contents="")
+        )
+        thread_id = str(thread.id)
+    else:
+        thread = get_conversation(db, uuid.UUID(thread_id))
+        if thread is None or thread.user_id != user.id:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Process URL extraction if needed
+    if "http" in user_message:
+        yield {"type": "status", "message": "Extracting content from URLs..."}
+        await asyncio.sleep(0.1)
+        
+    user_message = process_text_with_urls(user_message)
+    user_message_content: MessageContent = user_message
+
+    # Process image attachment if present
+    if attachment:
+        yield {"type": "status", "message": "Processing image attachment..."}
+        await asyncio.sleep(0.1)
+        
+        image_bytes = await attachment.read()
+        encoded_string = normalize_image_to_base64_jpeg(image_bytes)
+        user_message_content = [
+            {"type": "text", "text": user_message},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{encoded_string}"},
+            },
+        ]
+
+    # Search for relevant recipes
+    yield {"type": "status", "message": "Searching your recipe database..."}
+    await asyncio.sleep(0.1)
+    
+    relevant_recipes = find_relevant_recipes(user_message, user.id)
+    recipe_count = len(relevant_recipes)
+    
+    if recipe_count > 0:
+        yield {
+            "type": "recipe_search", 
+            "count": recipe_count,
+            "message": f"Found {recipe_count} relevant recipe{'s' if recipe_count != 1 else ''}"
+        }
+    else:
+        yield {
+            "type": "recipe_search", 
+            "count": 0,
+            "message": "No relevant recipes found in your database"
+        }
+    
+    await asyncio.sleep(0.1)
+
+    # Generate AI response
+    yield {"type": "status", "message": "Generating AI response..."}
+    await asyncio.sleep(0.1)
+    
+    prompt = get_prompt(
+        get_conversation_contents(thread),
+        relevant_recipes,
+        max_tokens=MAX_TOKENS - len(get_tokens(json.dumps(user_message_content))),
+    )
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": user_message_content},
+    ]
+
+    completion = openai_client.chat.completions.create(  # type: ignore
+        model=model,
+        messages=messages,  # type: ignore
+        tools=TOOLS,  # type: ignore
+    )
+
+    # Handle tool calls if present
+    tool_calls = completion.choices[0].message.tool_calls
+    if tool_calls:
+        for tool_call in tool_calls:
+            tool_name = tool_call.function.name
+            
+            if tool_name == "add_recipe":
+                yield {
+                    "type": "tool_use", 
+                    "tool": "add_recipe",
+                    "message": "Adding new recipe to your database..."
+                }
+            elif tool_name == "update_recipe":
+                yield {
+                    "type": "tool_use", 
+                    "tool": "update_recipe", 
+                    "message": "Updating existing recipe in your database..."
+                }
+            
+            await asyncio.sleep(0.1)
+            
+            # Execute the tool
+            attributes = json.loads(tool_call.function.arguments)
+            if tool_call.function.name == "add_recipe":
+                recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
+                messages.append(
+                    {
+                        "role": "function",
+                        "name": "add_recipe",
+                        "content": json.dumps({"recipe_id": recipe_id}),
+                    }
+                )
+                yield {
+                    "type": "tool_complete",
+                    "tool": "add_recipe", 
+                    "message": "✅ Recipe added successfully!"
+                }
+            elif tool_call.function.name == "update_recipe":
+                update_recipe(attributes["recipe_id"], attributes["recipe_yaml"], user.id)
+                messages.append(
+                    {
+                        "role": "function",
+                        "name": "add_recipe",
+                        "content": json.dumps({"status": "success"}),
+                    }
+                )
+                yield {
+                    "type": "tool_complete", 
+                    "tool": "update_recipe",
+                    "message": "✅ Recipe updated successfully!"
+                }
+
+        # Get final response after tool use
+        yield {"type": "status", "message": "Finalizing response..."}
+        await asyncio.sleep(0.1)
+        
+        completion = openai_client.chat.completions.create(  # type: ignore
+            model=model,
+            messages=messages,  # type: ignore
+        )
+
+    response = completion.choices[0].message.content or "No response generated"
+
+    # Update the conversation with relevant messages
+    user_message_dict = messages[1]  # type: ignore
+    assistant_message_dict = completion.choices[0].message.to_dict()
+
+    conversation_update_messages = [
+        {"role": user_message_dict["role"], "content": user_message_dict["content"]},  # type: ignore
+        {"role": assistant_message_dict["role"], "content": assistant_message_dict["content"]}
+    ]
+    update_conversation_contents(thread, conversation_update_messages)
+
+    # Final response
+    yield {
+        "type": "response",
+        "content": response,
+        "thread_id": thread_id
+    }
 
 
 def normalize_image_to_base64_jpeg(file_contents: bytes) -> str:

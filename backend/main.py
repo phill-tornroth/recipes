@@ -3,14 +3,14 @@ import json
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from config import config
-from assistant import chat
+from assistant import chat, chat_with_feedback
 from storage.dependencies import get_db
 from auth.routes import router as auth_router
 from auth.dependencies import get_current_user
@@ -78,3 +78,48 @@ async def chat_with_assistant(
     response, new_thread_id = await chat(db, current_user, user_message, thread_id, attachment)
     db.commit()
     return MessageResponse(response=response, thread_id=new_thread_id)
+
+
+@app.post("/chat/stream")
+async def chat_with_assistant_stream(
+    message: str = Form(...),
+    attachment: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream chat responses with real-time tool use feedback."""
+    try:
+        message_data = json.loads(message)
+        payload = MessagePayload(**message_data)
+    except (json.JSONDecodeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    user_message = payload.message
+    thread_id = payload.thread_id
+
+    async def generate_stream():
+        """Generate Server-Sent Events stream."""
+        try:
+            async for event in chat_with_feedback(db, current_user, user_message, thread_id, attachment):
+                yield f"data: {json.dumps(event)}\n\n"
+            
+            # Commit the database transaction
+            db.commit()
+            
+            # Signal end of stream
+            yield f"data: {json.dumps({'type': 'end'})}\n\n"
+        except Exception as e:
+            # Rollback on error
+            db.rollback()
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )

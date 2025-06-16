@@ -56,6 +56,7 @@ class TestUser:
             email="test@example.com",
             name="Test User",
             avatar_url="https://example.com/avatar.jpg",
+            provider="google",
             created_at=datetime.utcnow(),
             is_active=True,
         )

@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import json
+import uuid
 
 import assistant
 
@@ -69,7 +70,8 @@ class TestAssistant:
             assert result == [[0.1, 0.2, 0.3]]
 
     def test_find_relevant_recipes(self):
-        """Test relevant recipe finding."""
+        """Test relevant recipe finding with user isolation."""
+        user_id = uuid.uuid4()
         mock_query_results = Mock()
         mock_query_results.matches = [
             Mock(metadata={"contents": "Recipe 1"}),
@@ -80,23 +82,34 @@ class TestAssistant:
             with patch('assistant.index') as mock_index:
                 mock_index.query.return_value = mock_query_results
                 
-                result = assistant.find_relevant_recipes("pasta")
+                result = assistant.find_relevant_recipes("pasta", user_id)
                 assert result == ["Recipe 1", "Recipe 2"]
+                
+                # Verify user namespace isolation
+                mock_index.query.assert_called_with(
+                    namespace=f"user_{user_id}",
+                    vector=[0.1, 0.2, 0.3],
+                    top_k=5,
+                    include_values=False,
+                    include_metadata=True,
+                )
 
     def test_add_recipe(self):
-        """Test recipe addition."""
+        """Test recipe addition with user isolation."""
+        user_id = uuid.uuid4()
         test_recipe = "recipe:\n  title: Test Recipe"
         
         with patch('assistant.update_recipe') as mock_update:
             with patch('assistant.uuid.uuid4') as mock_uuid:
                 mock_uuid.return_value = "test-uuid"
                 
-                result = assistant.add_recipe(test_recipe)
+                result = assistant.add_recipe(test_recipe, user_id)
                 assert result == "test-uuid"
-                mock_update.assert_called_once_with("test-uuid", test_recipe)
+                mock_update.assert_called_once_with("test-uuid", test_recipe, user_id)
 
     def test_update_recipe(self):
-        """Test recipe update."""
+        """Test recipe update with user isolation."""
+        user_id = uuid.uuid4()
         test_recipe = "recipe:\n  title: Test Recipe"
         test_id = "test-recipe-id"
         
@@ -108,6 +121,10 @@ class TestAssistant:
                         mock_yaml_dump.return_value = test_recipe
                         mock_embeddings.return_value = [[0.1, 0.2, 0.3]]
                         
-                        result = assistant.update_recipe(test_id, test_recipe)
+                        result = assistant.update_recipe(test_id, test_recipe, user_id)
                         assert result == test_id
+                        
+                        # Verify user namespace isolation
                         mock_index.upsert.assert_called_once()
+                        call_args = mock_index.upsert.call_args
+                        assert call_args[1]["namespace"] == f"user_{user_id}"

@@ -1,15 +1,16 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Cookie
+
+from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from storage.dependencies import get_db
+
 from .jwt_handler import JWTHandler
-from .repository import UserRepository
 from .models import User
+from .repository import UserRepository
 
 
 async def get_current_user(
-    access_token: Optional[str] = Cookie(None),
-    db: Session = Depends(get_db)
+    access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)
 ) -> User:
     """Get the current authenticated user from JWT token in cookie."""
     credentials_exception = HTTPException(
@@ -31,16 +32,14 @@ async def get_current_user(
 
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Inactive user"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )
 
     return user
 
 
 async def get_optional_user(
-    access_token: Optional[str] = Cookie(None),
-    db: Session = Depends(get_db)
+    access_token: Optional[str] = Cookie(None), db: Session = Depends(get_db)
 ) -> Optional[User]:
     """Get the current user if authenticated, None otherwise."""
     if not access_token:

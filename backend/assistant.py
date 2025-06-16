@@ -1,36 +1,32 @@
+import asyncio
 import base64
 import json
 import logging
+import math
 import re
-from typing import List, Dict, Any, Union, AsyncGenerator
 import uuid
-import asyncio
+from io import BytesIO
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Union
 
 import requests
-from bs4 import BeautifulSoup
-from io import BytesIO
-from PIL import Image
-import math
-
-from openai import OpenAI
-from pinecone.grpc import PineconeGRPC as Pinecone
-from sqlalchemy.orm import Session
 import yaml
-from fastapi import UploadFile, HTTPException
-from typing import Optional, Tuple
-
+from auth.models import User
+from bs4 import BeautifulSoup
 from config import config
+from fastapi import HTTPException, UploadFile
+from openai import OpenAI
+from PIL import Image
+from pinecone.grpc import PineconeGRPC as Pinecone
 from prompts import get_prompt
-
-from utils.tokens import get_tokens
+from sqlalchemy.orm import Session
 from storage.conversations import (
     ConversationUpsert,
-    upsert_conversation,
     get_conversation,
     get_conversation_contents,
     update_conversation_contents,
+    upsert_conversation,
 )
-from auth.models import User
+from utils.tokens import get_tokens
 
 # Type aliases for better readability
 MessageContent = Union[str, List[Dict[str, Any]]]
@@ -154,7 +150,9 @@ async def chat(
                     }
                 )
             elif tool_call.function.name == "update_recipe":
-                update_recipe(attributes["recipe_id"], attributes["recipe_yaml"], user.id)
+                update_recipe(
+                    attributes["recipe_id"], attributes["recipe_yaml"], user.id
+                )
                 messages.append(
                     {
                         "role": "function",
@@ -177,7 +175,10 @@ async def chat(
 
     conversation_update_messages = [
         {"role": user_message_dict["role"], "content": user_message_dict["content"]},  # type: ignore
-        {"role": assistant_message_dict["role"], "content": assistant_message_dict["content"]}
+        {
+            "role": assistant_message_dict["role"],
+            "content": assistant_message_dict["content"],
+        },
     ]
     update_conversation_contents(thread, conversation_update_messages)
 
@@ -193,18 +194,18 @@ async def chat_with_feedback(
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """
     Chat function that yields progress updates for real-time feedback.
-    
+
     Yields events with the following structure:
     - {'type': 'status', 'message': 'Searching your recipe database...'}
     - {'type': 'recipe_search', 'count': 3, 'message': 'Found 3 relevant recipes'}
     - {'type': 'tool_use', 'tool': 'add_recipe', 'message': 'Adding new recipe...'}
     - {'type': 'response', 'content': 'Here is my response...', 'thread_id': 'abc123'}
     """
-    
+
     # Initialize the thread if it's the first message
     yield {"type": "status", "message": "Initializing conversation..."}
     await asyncio.sleep(0.1)  # Small delay for UI feedback
-    
+
     if thread_id is None:
         thread = upsert_conversation(
             db, ConversationUpsert(user_id=user.id, contents="")
@@ -219,7 +220,7 @@ async def chat_with_feedback(
     if "http" in user_message:
         yield {"type": "status", "message": "Extracting content from URLs..."}
         await asyncio.sleep(0.1)
-        
+
     user_message = process_text_with_urls(user_message)
     user_message_content: MessageContent = user_message
 
@@ -227,7 +228,7 @@ async def chat_with_feedback(
     if attachment:
         yield {"type": "status", "message": "Processing image attachment..."}
         await asyncio.sleep(0.1)
-        
+
         image_bytes = await attachment.read()
         encoded_string = normalize_image_to_base64_jpeg(image_bytes)
         user_message_content = [
@@ -241,29 +242,29 @@ async def chat_with_feedback(
     # Search for relevant recipes
     yield {"type": "status", "message": "Searching your recipe database..."}
     await asyncio.sleep(0.1)
-    
+
     relevant_recipes = find_relevant_recipes(user_message, user.id)
     recipe_count = len(relevant_recipes)
-    
+
     if recipe_count > 0:
         yield {
-            "type": "recipe_search", 
+            "type": "recipe_search",
             "count": recipe_count,
-            "message": f"Found {recipe_count} relevant recipe{'s' if recipe_count != 1 else ''}"
+            "message": f"Found {recipe_count} relevant recipe{'s' if recipe_count != 1 else ''}",
         }
     else:
         yield {
-            "type": "recipe_search", 
+            "type": "recipe_search",
             "count": 0,
-            "message": "No relevant recipes found in your database"
+            "message": "No relevant recipes found in your database",
         }
-    
+
     await asyncio.sleep(0.1)
 
     # Generate AI response
     yield {"type": "status", "message": "Generating AI response..."}
     await asyncio.sleep(0.1)
-    
+
     prompt = get_prompt(
         get_conversation_contents(thread),
         relevant_recipes,
@@ -285,22 +286,22 @@ async def chat_with_feedback(
     if tool_calls:
         for tool_call in tool_calls:
             tool_name = tool_call.function.name
-            
+
             if tool_name == "add_recipe":
                 yield {
-                    "type": "tool_use", 
+                    "type": "tool_use",
                     "tool": "add_recipe",
-                    "message": "Adding new recipe to your database..."
+                    "message": "Adding new recipe to your database...",
                 }
             elif tool_name == "update_recipe":
                 yield {
-                    "type": "tool_use", 
-                    "tool": "update_recipe", 
-                    "message": "Updating existing recipe in your database..."
+                    "type": "tool_use",
+                    "tool": "update_recipe",
+                    "message": "Updating existing recipe in your database...",
                 }
-            
+
             await asyncio.sleep(0.1)
-            
+
             # Execute the tool
             attributes = json.loads(tool_call.function.arguments)
             if tool_call.function.name == "add_recipe":
@@ -314,11 +315,13 @@ async def chat_with_feedback(
                 )
                 yield {
                     "type": "tool_complete",
-                    "tool": "add_recipe", 
-                    "message": "✅ Recipe added successfully!"
+                    "tool": "add_recipe",
+                    "message": "✅ Recipe added successfully!",
                 }
             elif tool_call.function.name == "update_recipe":
-                update_recipe(attributes["recipe_id"], attributes["recipe_yaml"], user.id)
+                update_recipe(
+                    attributes["recipe_id"], attributes["recipe_yaml"], user.id
+                )
                 messages.append(
                     {
                         "role": "function",
@@ -327,15 +330,15 @@ async def chat_with_feedback(
                     }
                 )
                 yield {
-                    "type": "tool_complete", 
+                    "type": "tool_complete",
                     "tool": "update_recipe",
-                    "message": "✅ Recipe updated successfully!"
+                    "message": "✅ Recipe updated successfully!",
                 }
 
         # Get final response after tool use
         yield {"type": "status", "message": "Finalizing response..."}
         await asyncio.sleep(0.1)
-        
+
         completion = openai_client.chat.completions.create(  # type: ignore
             model=model,
             messages=messages,  # type: ignore
@@ -349,16 +352,15 @@ async def chat_with_feedback(
 
     conversation_update_messages = [
         {"role": user_message_dict["role"], "content": user_message_dict["content"]},  # type: ignore
-        {"role": assistant_message_dict["role"], "content": assistant_message_dict["content"]}
+        {
+            "role": assistant_message_dict["role"],
+            "content": assistant_message_dict["content"],
+        },
     ]
     update_conversation_contents(thread, conversation_update_messages)
 
     # Final response
-    yield {
-        "type": "response",
-        "content": response,
-        "thread_id": thread_id
-    }
+    yield {"type": "response", "content": response, "thread_id": thread_id}
 
 
 def normalize_image_to_base64_jpeg(file_contents: bytes) -> str:
@@ -400,7 +402,9 @@ def get_embeddings(contents: str) -> List[List[float]]:
     return embeddings
 
 
-def find_relevant_recipes(user_query: str, user_id: uuid.UUID, top_k: int = 5) -> List[str]:
+def find_relevant_recipes(
+    user_query: str, user_id: uuid.UUID, top_k: int = 5
+) -> List[str]:
     query_embedding = get_embeddings(user_query)
     query_results = index.query(
         namespace=f"user_{user_id}",

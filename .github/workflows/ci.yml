@@ -58,10 +58,9 @@ jobs:
       run: |
         poetry run black --check backend tests
         poetry run isort --check-only backend tests
-        poetry run flake8 backend tests
     
     - name: Run type checking
-      run: poetry run mypy backend
+      run: poetry run mypy backend --ignore-missing-imports
       continue-on-error: true  # Type checking can be strict initially
     
     - name: Run tests

@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel
-from sqlalchemy import Column, String, TIMESTAMP, Boolean
+from sqlalchemy import TIMESTAMP, Boolean, Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from storage.conversations import Base
 
@@ -17,7 +18,9 @@ class User(Base):
     provider = Column(String(50), nullable=False, default="google")
     provider_id = Column(String(255), nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
-    updated_at = Column(TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        TIMESTAMP, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     is_active = Column(Boolean, nullable=False, default=True)
 
 
@@ -44,6 +47,7 @@ class UserResponse(BaseModel):
 
 class GoogleUserInfo(BaseModel):
     """Google OAuth user information"""
+
     id: str
     email: str
     name: str

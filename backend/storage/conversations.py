@@ -1,10 +1,10 @@
 import json
 import uuid
-from typing import List, Dict, Any
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, Text, TIMESTAMP
+from sqlalchemy import TIMESTAMP, Column, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
@@ -47,7 +47,7 @@ def upsert_conversation(
             contents=conversation_data.contents,
         )
         db.add(conversation)
-    
+
     if conversation is None:
         # Create new conversation if not found
         conversation = Conversation(
@@ -57,7 +57,7 @@ def upsert_conversation(
             contents=conversation_data.contents,
         )
         db.add(conversation)
-    
+
     db.commit()
     db.refresh(conversation)
     return conversation

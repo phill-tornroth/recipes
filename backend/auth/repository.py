@@ -1,7 +1,9 @@
 import uuid
 from typing import Optional
+
 from sqlalchemy.orm import Session
-from .models import User, UserCreate, GoogleUserInfo
+
+from .models import GoogleUserInfo, User, UserCreate
 
 
 class UserRepository:
@@ -16,12 +18,15 @@ class UserRepository:
         return db.query(User).filter(User.email == email).first()
 
     @staticmethod
-    def get_by_provider_id(db: Session, provider: str, provider_id: str) -> Optional[User]:
+    def get_by_provider_id(
+        db: Session, provider: str, provider_id: str
+    ) -> Optional[User]:
         """Get user by provider and provider ID."""
-        return db.query(User).filter(
-            User.provider == provider,
-            User.provider_id == provider_id
-        ).first()
+        return (
+            db.query(User)
+            .filter(User.provider == provider, User.provider_id == provider_id)
+            .first()
+        )
 
     @staticmethod
     def create(db: Session, user_data: UserCreate) -> User:
@@ -56,7 +61,7 @@ class UserRepository:
         for field, value in kwargs.items():
             if hasattr(user, field):
                 setattr(user, field, value)
-        
+
         db.commit()
         db.refresh(user)
         return user

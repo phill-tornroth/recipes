@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from jose import JWTError, jwt
+from typing import Any, Dict, Optional
+
 from config import config
+from jose import JWTError, jwt
 
 
 class JWTHandler:
@@ -30,10 +31,10 @@ class JWTHandler:
             payload = jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])
             user_id: str = payload.get("sub")
             email: str = payload.get("email")
-            
+
             if user_id is None or email is None:
                 return None
-                
+
             return {"user_id": uuid.UUID(user_id), "email": email}
         except JWTError:
             return None

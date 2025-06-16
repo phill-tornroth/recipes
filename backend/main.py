@@ -1,20 +1,19 @@
-import os
 import json
-
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+import os
 from typing import Optional
-from sqlalchemy.orm import Session
 
-from config import config
 from assistant import chat, chat_with_feedback
-from storage.dependencies import get_db
-from auth.routes import router as auth_router
 from auth.dependencies import get_current_user
 from auth.models import User
+from auth.routes import router as auth_router
+from config import config
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from storage.dependencies import get_db
 
 # Validate required environment variables on startup
 config.validate_required_vars()
@@ -75,7 +74,9 @@ async def chat_with_assistant(
     thread_id = payload.thread_id
 
     # Call the chat function with the message and attachment
-    response, new_thread_id = await chat(db, current_user, user_message, thread_id, attachment)
+    response, new_thread_id = await chat(
+        db, current_user, user_message, thread_id, attachment
+    )
     db.commit()
     return MessageResponse(response=response, thread_id=new_thread_id)
 
@@ -100,12 +101,14 @@ async def chat_with_assistant_stream(
     async def generate_stream():
         """Generate Server-Sent Events stream."""
         try:
-            async for event in chat_with_feedback(db, current_user, user_message, thread_id, attachment):
+            async for event in chat_with_feedback(
+                db, current_user, user_message, thread_id, attachment
+            ):
                 yield f"data: {json.dumps(event)}\n\n"
-            
+
             # Commit the database transaction
             db.commit()
-            
+
             # Signal end of stream
             yield f"data: {json.dumps({'type': 'end'})}\n\n"
         except Exception as e:
@@ -121,5 +124,5 @@ async def chat_with_assistant_stream(
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "*",
-        }
+        },
     )

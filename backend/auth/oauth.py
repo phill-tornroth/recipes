@@ -1,12 +1,9 @@
-import httpx
 from typing import Optional
 from urllib.parse import urlencode
-from authlib.integrations.starlette_client import OAuth
-from authlib.integrations.base_client import OAuthError
-from starlette.config import Config as StarletteConfig
-from starlette.requests import Request
 
+import httpx
 from config import config
+
 from .models import GoogleUserInfo
 
 
@@ -14,9 +11,11 @@ class GoogleOAuth:
     def __init__(self):
         self.client_id = config.GOOGLE_CLIENT_ID
         self.client_secret = config.GOOGLE_CLIENT_SECRET
-        self.redirect_uri = "http://localhost:8000/auth/google/callback"  # TODO: Make configurable
+        self.redirect_uri = (
+            "http://localhost:8000/auth/google/callback"  # TODO: Make configurable
+        )
         self.scope = "openid email profile"
-        
+
         # OAuth endpoints
         self.auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
         self.token_url = "https://oauth2.googleapis.com/token"
@@ -32,10 +31,10 @@ class GoogleOAuth:
             "access_type": "offline",
             "prompt": "consent",
         }
-        
+
         if state:
             params["state"] = state
-            
+
         return f"{self.auth_url}?{urlencode(params)}"
 
     async def exchange_code_for_token(self, code: str) -> Optional[str]:
@@ -60,19 +59,19 @@ class GoogleOAuth:
     async def get_user_info(self, access_token: str) -> Optional[GoogleUserInfo]:
         """Get user information from Google using access token."""
         headers = {"Authorization": f"Bearer {access_token}"}
-        
+
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(self.userinfo_url, headers=headers)
                 response.raise_for_status()
                 user_data = response.json()
-                
+
                 return GoogleUserInfo(
                     id=user_data["id"],
                     email=user_data["email"],
                     name=user_data["name"],
                     picture=user_data.get("picture"),
-                    verified_email=user_data.get("verified_email", True)
+                    verified_email=user_data.get("verified_email", True),
                 )
             except (httpx.HTTPError, KeyError):
                 return None

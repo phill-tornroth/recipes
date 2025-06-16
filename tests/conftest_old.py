@@ -8,35 +8,41 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 # Patch external services before ANY imports happen
-with patch.dict("sys.modules", {
-    "pinecone": Mock(),
-    "pinecone.grpc": Mock(),
-    "openai": Mock(),
-}):
+with patch.dict(
+    "sys.modules",
+    {
+        "pinecone": Mock(),
+        "pinecone.grpc": Mock(),
+        "openai": Mock(),
+    },
+):
     # Mock the classes at import time
-    import pinecone.grpc
     import openai
-    
+    import pinecone.grpc
+
     # Create mock instances that will be used
     mock_pinecone = Mock()
     mock_index = Mock()
     mock_index.upsert.return_value = None
     mock_index.query.return_value = Mock(matches=[])
     mock_pinecone.Index.return_value = mock_index
-    
+
     mock_openai_client = Mock()
     mock_completion = Mock()
     mock_completion.choices = [Mock()]
     mock_completion.choices[0].message.content = "Test response"
     mock_completion.choices[0].message.tool_calls = None
-    mock_completion.choices[0].message.to_dict.return_value = {"role": "assistant", "content": "Test response"}
+    mock_completion.choices[0].message.to_dict.return_value = {
+        "role": "assistant",
+        "content": "Test response",
+    }
     mock_openai_client.chat.completions.create.return_value = mock_completion
-    
+
     # Mock embeddings
     mock_embedding_response = Mock()
     mock_embedding_response.data = [Mock(embedding=[0.1] * 1536)]
     mock_openai_client.embeddings.create.return_value = mock_embedding_response
-    
+
     # Replace the actual classes
     pinecone.grpc.PineconeGRPC = Mock(return_value=mock_pinecone)
     openai.OpenAI = Mock(return_value=mock_openai_client)

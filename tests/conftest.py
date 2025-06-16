@@ -1,6 +1,7 @@
 """
 Simple conftest that properly mocks external services before imports.
 """
+
 import os
 import sys
 from unittest.mock import Mock, patch
@@ -8,14 +9,14 @@ from unittest.mock import Mock, patch
 # Set environment variables first
 test_env_vars = {
     "OPENAI_API_KEY": "test-openai-key",
-    "PINECONE_API_KEY": "test-pinecone-key", 
+    "PINECONE_API_KEY": "test-pinecone-key",
     "GOOGLE_CLIENT_ID": "test-google-client-id",
     "GOOGLE_CLIENT_SECRET": "test-google-client-secret",
     "SECRET_KEY": "test-secret-key-for-jwt-signing",
     "DB_HOST": "localhost",
     "DB_PORT": "5432",
     "DB_NAME": "test_recipes",
-    "DB_USER": "test_user", 
+    "DB_USER": "test_user",
     "DB_PASSWORD": "test_password",
 }
 
@@ -42,7 +43,7 @@ _mock_completion.choices[0].message.content = "Test response"
 _mock_completion.choices[0].message.tool_calls = None
 _mock_completion.choices[0].message.to_dict.return_value = {
     "role": "assistant",
-    "content": "Test response"
+    "content": "Test response",
 }
 _mock_openai_instance.chat.completions.create.return_value = _mock_completion
 
@@ -66,7 +67,7 @@ def mock_external_services():
         mock_response.json.return_value = {
             "email": "test@example.com",
             "name": "Test User",
-            "picture": "https://example.com/avatar.jpg", 
+            "picture": "https://example.com/avatar.jpg",
             "sub": "123456789",
         }
         mock_httpx.get.return_value = mock_response
@@ -85,6 +86,7 @@ def test_user():
     """Create a test user for testing."""
     import uuid
     from datetime import datetime
+
     from auth.models import User
 
     return User(

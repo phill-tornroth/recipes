@@ -1,6 +1,7 @@
 """
 Test package initialization that patches external services before any imports.
 """
+
 import os
 import sys
 from unittest.mock import Mock, patch
@@ -10,7 +11,7 @@ test_env_vars = {
     "OPENAI_API_KEY": "test-openai-key",
     "PINECONE_API_KEY": "test-pinecone-key",
     "GOOGLE_CLIENT_ID": "test-google-client-id",
-    "GOOGLE_CLIENT_SECRET": "test-google-client-secret", 
+    "GOOGLE_CLIENT_SECRET": "test-google-client-secret",
     "SECRET_KEY": "test-secret-key-for-jwt-signing",
     "DB_HOST": "localhost",
     "DB_PORT": "5432",
@@ -39,7 +40,7 @@ _mock_completion.choices[0].message.content = "Test response"
 _mock_completion.choices[0].message.tool_calls = None
 _mock_completion.choices[0].message.to_dict.return_value = {
     "role": "assistant",
-    "content": "Test response"
+    "content": "Test response",
 }
 _mock_openai_instance.chat.completions.create.return_value = _mock_completion
 
@@ -49,7 +50,9 @@ _mock_embedding_response.data = [Mock(embedding=[0.1] * 1536)]
 _mock_openai_instance.embeddings.create.return_value = _mock_embedding_response
 
 # Start patches immediately
-_pinecone_patcher = patch("pinecone.grpc.PineconeGRPC", return_value=_mock_pinecone_instance)
+_pinecone_patcher = patch(
+    "pinecone.grpc.PineconeGRPC", return_value=_mock_pinecone_instance
+)
 _openai_patcher = patch("openai.OpenAI", return_value=_mock_openai_instance)
 
 _pinecone_patcher.start()

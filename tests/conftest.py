@@ -84,41 +84,59 @@ def test_user():
     )
 
 
-# Mock external services before any modules are imported
-# This prevents real API calls during import
-_mock_pinecone = Mock()
-_mock_index = Mock()
-_mock_pinecone.Index.return_value = _mock_index
-
-_mock_openai = Mock()
-_mock_response = Mock()
-_mock_response.data = [Mock(embedding=[0.1, 0.2, 0.3])]
-_mock_openai.embeddings.create.return_value = _mock_response
-
-# Patch the modules before they're imported
-with patch.dict(
-    "sys.modules",
-    {
-        "pinecone.grpc": Mock(PineconeGRPC=lambda **kwargs: _mock_pinecone),
-        "openai": Mock(OpenAI=lambda **kwargs: _mock_openai),
-    },
-):
-    pass
+# Mock external services to prevent real API calls during testing
+# Apply patches at session level to catch imports
 
 
-@pytest.fixture(autouse=True)
-def mock_external_services():
-    """Automatically mock external services for all tests."""
+@pytest.fixture(autouse=True, scope="session")
+def mock_all_external_services():
+    """Mock all external services at session start."""
     with (
-        patch("assistant.pc", _mock_pinecone),
-        patch("assistant.index", _mock_index),
-        patch("assistant.openai_client", _mock_openai),
-        patch("auth.oauth.httpx.AsyncClient") as mock_httpx,
+        patch("pinecone.grpc.PineconeGRPC") as mock_pinecone_class,
+        patch("openai.OpenAI") as mock_openai_class,
+        patch("auth.oauth.httpx.AsyncClient") as mock_httpx_class,
     ):
+        # Mock Pinecone
+        mock_pinecone = Mock()
+        mock_index = Mock()
+        mock_index.upsert.return_value = None
+        mock_index.query.return_value = Mock(matches=[])
+        mock_pinecone.Index.return_value = mock_index
+        mock_pinecone_class.return_value = mock_pinecone
+
+        # Mock OpenAI
+        mock_openai = Mock()
+        mock_completion = Mock()
+        mock_completion.choices = [Mock()]
+        mock_completion.choices[0].message.content = "Test response"
+        mock_completion.choices[0].message.tool_calls = None
+        mock_completion.choices[0].message.to_dict.return_value = {
+            "role": "assistant", 
+            "content": "Test response"
+        }
+        mock_openai.chat.completions.create.return_value = mock_completion
+        
+        # Mock embeddings
+        mock_embedding_response = Mock()
+        mock_embedding_response.data = [Mock(embedding=[0.1] * 1536)]
+        mock_openai.embeddings.create.return_value = mock_embedding_response
+        mock_openai_class.return_value = mock_openai
+
+        # Mock httpx for OAuth
+        mock_httpx = Mock()
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "email": "test@example.com",
+            "name": "Test User", 
+            "picture": "https://example.com/avatar.jpg",
+            "sub": "123456789"
+        }
+        mock_httpx.get.return_value = mock_response
+        mock_httpx_class.return_value = mock_httpx
 
         yield {
-            "pinecone": _mock_pinecone,
-            "openai": _mock_openai,
+            "pinecone": mock_pinecone,
+            "openai": mock_openai,
+            "index": mock_index,
             "httpx": mock_httpx,
-            "index": _mock_index,
         }

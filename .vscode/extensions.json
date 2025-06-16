@@ -6,23 +6,23 @@
     "ms-python.isort",
     "ms-python.flake8",
     "ms-python.mypy-type-checker",
-    
+
     // JavaScript/Frontend
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
-    
+
     // General development
     "ms-vscode.makefile-tools",
     "redhat.vscode-yaml",
     "ms-vscode.vscode-json",
-    
+
     // Git and collaboration
     "eamodio.gitlens",
     "github.vscode-pull-request-github",
-    
+
     // Docker
     "ms-azuretools.vscode-docker",
-    
+
     // Additional helpful extensions
     "ms-vscode.test-adapter-converter",
     "ms-python.pytest",

@@ -111,11 +111,11 @@ def mock_all_external_services():
         mock_completion.choices[0].message.content = "Test response"
         mock_completion.choices[0].message.tool_calls = None
         mock_completion.choices[0].message.to_dict.return_value = {
-            "role": "assistant", 
-            "content": "Test response"
+            "role": "assistant",
+            "content": "Test response",
         }
         mock_openai.chat.completions.create.return_value = mock_completion
-        
+
         # Mock embeddings
         mock_embedding_response = Mock()
         mock_embedding_response.data = [Mock(embedding=[0.1] * 1536)]
@@ -127,9 +127,9 @@ def mock_all_external_services():
         mock_response = Mock()
         mock_response.json.return_value = {
             "email": "test@example.com",
-            "name": "Test User", 
+            "name": "Test User",
             "picture": "https://example.com/avatar.jpg",
-            "sub": "123456789"
+            "sub": "123456789",
         }
         mock_httpx.get.return_value = mock_response
         mock_httpx_class.return_value = mock_httpx

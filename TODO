@@ -57,7 +57,7 @@
 - [x] Comprehensive type hints
 - [x] CI/CD pipeline (GitHub Actions)
 
-### Core Features  
+### Core Features
 - [x] Support attachments (images with recipes)
 - [x] Support URLs (links to recipe sites)
 - [x] Respect text/token limits in conversation history

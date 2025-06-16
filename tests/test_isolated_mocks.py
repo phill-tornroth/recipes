@@ -10,15 +10,15 @@ from unittest.mock import Mock, patch
 # Set up environment before importing anything
 test_env = {
     "OPENAI_API_KEY": "test-key",
-    "PINECONE_API_KEY": "test-key", 
+    "PINECONE_API_KEY": "test-key",
     "GOOGLE_CLIENT_ID": "test-client-id",
     "GOOGLE_CLIENT_SECRET": "test-secret",
     "SECRET_KEY": "test-secret-key-for-jwt",
     "DB_HOST": "localhost",
-    "DB_PORT": "5432", 
+    "DB_PORT": "5432",
     "DB_NAME": "test_db",
     "DB_USER": "test_user",
-    "DB_PASSWORD": "test_pass"
+    "DB_PASSWORD": "test_pass",
 }
 
 for k, v in test_env.items():
@@ -55,7 +55,7 @@ def test_mock_setup():
         # Test that the mocked objects are being used
         assert assistant.pc is not None
         assert assistant.index is not None
-        
+
         # Test a basic function
         result = assistant.normalize_image_to_base64_jpeg(b"fake_image_data")
         assert result is not None
@@ -78,6 +78,7 @@ def test_basic_functionality():
 
         # Import config to make sure it works
         from config import Config
+
         config = Config()
         assert config.OPENAI_API_KEY == "test-key"
         assert config.PINECONE_API_KEY == "test-key"

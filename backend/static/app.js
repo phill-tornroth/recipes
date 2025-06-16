@@ -58,13 +58,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function showChatInterface() {
     authContainer.style.display = "none";
     chatContainer.style.display = "flex";
-    
+
     if (currentUser) {
       userName.textContent = currentUser.name;
       userAvatar.src = currentUser.avatar_url || "/static/default-avatar.png";
       userAvatar.alt = currentUser.name;
     }
-    
+
     // Initialize speech recognition only when authenticated
     if (!recognition) {
       initializeSpeechRecognition();
@@ -367,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statusElement.className = 'status-message';
       responsePane.appendChild(statusElement);
     }
-    
+
     // Update content based on type
     if (type === 'recipe_search') {
       statusElement.innerHTML = `<span class="search-icon">🔍</span> ${message}`;
@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
       statusElement.innerHTML = `<span class="spinner-small"></span> ${message}`;
       statusElement.className = 'status-message';
     }
-    
+
     responsePane.scrollTop = responsePane.scrollHeight;
   }
 
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showError("Please login to send messages");
       return;
     }
-    
+
     const message = userInput.value.trim();
     if (message || selectedFile) {
       if (message) {
@@ -457,12 +457,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
           const lines = buffer.split('\n');
-          
+
           // Process complete lines, keep incomplete line in buffer
           for (let i = 0; i < lines.length - 1; i++) {
             const line = lines[i].trim();
@@ -475,14 +475,14 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             }
           }
-          
+
           buffer = lines[lines.length - 1];
         }
 
       } catch (error) {
         console.error("Streaming failed, falling back to regular endpoint:", error);
         removeStatusMessage();
-        
+
         // Fallback to non-streaming endpoint
         try {
           showLoadingIndicator();
@@ -490,7 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
             method: "POST",
             body: formData,
           });
-          
+
           if (fallbackResponse.ok) {
             const data = await fallbackResponse.json();
             threadId = data.thread_id;
@@ -516,34 +516,34 @@ document.addEventListener("DOMContentLoaded", () => {
       case 'status':
         showStatusMessage(event.message, 'status');
         break;
-        
+
       case 'recipe_search':
         showStatusMessage(event.message, 'recipe_search');
         break;
-        
+
       case 'tool_use':
         showStatusMessage(event.message, 'tool_use');
         break;
-        
+
       case 'tool_complete':
         showStatusMessage(event.message, 'tool_complete');
         break;
-        
+
       case 'response':
         removeStatusMessage();
         threadId = event.thread_id;
         appendMessage(event.content, "bot-message");
         break;
-        
+
       case 'end':
         removeStatusMessage();
         break;
-        
+
       case 'error':
         removeStatusMessage();
         showError(`Error: ${event.message}`);
         break;
-        
+
       default:
         console.log('Unknown event type:', event.type, event);
     }

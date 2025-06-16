@@ -144,7 +144,7 @@ Choose between two workflows:
 docker-compose up --build
 ```
 
-**Pros:** Simple, isolated, closer to production  
+**Pros:** Simple, isolated, closer to production
 **Cons:** Slower rebuilds, less convenient for development
 
 #### Option B: Hybrid Development (Recommended for active development)
@@ -155,7 +155,7 @@ docker-compose up -d postgres
 poetry run python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Pros:** Fast hot reload, better debugging, IDE integration  
+**Pros:** Fast hot reload, better debugging, IDE integration
 **Cons:** Need Poetry locally, more setup
 
 **Note:** Make sure you have set up your `.env` file with all required API keys and OAuth credentials before running the project.
@@ -250,7 +250,7 @@ The project includes VSCode/Cursor configuration for seamless development:
 4. **Debugging** - Pre-configured debug configurations for FastAPI and tests
 5. **Tasks** - Use Ctrl/Cmd+Shift+P → "Tasks: Run Task" to access:
    - Format Python Code
-   - Lint Python Code  
+   - Lint Python Code
    - Run Tests
    - Run Tests with Coverage
    - Check All

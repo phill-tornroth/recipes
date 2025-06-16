@@ -1,5 +1,5 @@
-backend-1   | Found 0 relevant recipes: 
-backend-1   | 
+backend-1   | Found 0 relevant recipes:
+backend-1   |
 backend-1   | ERROR:root:Tool call failed
 backend-1   | Traceback (most recent call last):
 backend-1   |   File "/app/assistant.py", line 86, in chat
@@ -42,6 +42,6 @@ backend-1   |         - name: "Dried kombu"
 backend-1   |           ^
 backend-1   | expected <block end>, but found '<scalar>'
 backend-1   |   in "<unicode string>", line 9, column 41:
-backend-1   |      ... y: "1 sheet, approximately 8.5" x 11", broken into bookmark size ... 
+backend-1   |      ... y: "1 sheet, approximately 8.5" x 11", broken into bookmark size ...
 backend-1   |                                          ^
 backend-1   | {'tool_call_id': 'call_s0zCmvkVoaWgJ9W7mJizXvKP', 'output': 'Error in function call add_recipe with arguments {"recipe_yaml":"recipe:\\n  title: \\"Dashi\\"\\n  estimated_cooking_time: \\"50 minutes\\"\\n  serves: \\"Variable, based on use\\"\\n  ingredients:\\n    - name: \\"Dried shiitake mushrooms\\"\\n      qty: \\"Two handfuls\\"\\n    - name: \\"Dried kombu\\"\\n      qty: \\"1 sheet, approximately 8.5\\" x 11\\", broken into bookmark sized pieces\\"\\n  steps:\\n    - step: \\"Add dried shiitake mushrooms and kombu to water in a 4-quart pan.\\"\\n    - step: \\"Bring the water to 140 degrees F and maintain the temperature for 50 minutes.\\"\\n    - step: \\"Ensure the heat does not exceed 150 degrees F.\\"\\n  notes: \\"Use this as a base for soups or other dishes.\\""}'}

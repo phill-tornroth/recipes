@@ -27,7 +27,12 @@ class TestConfig:
     def test_validate_required_vars_missing_keys(self):
         """Test that validation fails when required keys are missing."""
         # Clear only the required keys, keep others for the test environment to work
-        clear_keys = ["OPENAI_API_KEY", "PINECONE_API_KEY", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
+        clear_keys = [
+            "OPENAI_API_KEY",
+            "PINECONE_API_KEY",
+            "GOOGLE_CLIENT_ID",
+            "GOOGLE_CLIENT_SECRET",
+        ]
         with patch.dict(os.environ, {key: "" for key in clear_keys}):
             config = Config()
             with pytest.raises(

@@ -9,11 +9,11 @@
     // Inherit from .vscode/settings.json
     "python.defaultInterpreterPath": "./.venv/bin/python",
     "python.terminal.activateEnvironment": true,
-    
+
     // Workspace-specific overrides
     "explorer.excludeGitIgnore": true,
     "git.ignoreLimitWarning": true,
-    
+
     // Terminal settings
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.env.osx": {

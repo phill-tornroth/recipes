@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Authentication elements
+  const authContainer = document.getElementById("auth-container");
+  const chatContainer = document.getElementById("chat-container");
+  const googleLoginBtn = document.getElementById("google-login-btn");
+  const userHeader = document.getElementById("user-header");
+  const userAvatar = document.getElementById("user-avatar");
+  const userName = document.getElementById("user-name");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  // Chat elements
   const responsePane = document.getElementById("response-pane");
   const userInput = document.getElementById("user-input");
   const sendButton = document.getElementById("send-button");
@@ -7,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const micButton = document.getElementById("mic-button");
   const tooltip = micButton.querySelector(".tooltip");
 
+  // Application state
+  let currentUser = null;
   let threadId = null;
   let loadingIndicator = null;
   let selectedFile = null;
@@ -16,6 +28,88 @@ document.addEventListener("DOMContentLoaded", () => {
   let isRetrying = false;
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 2000; // 2 seconds between retries
+
+  // Authentication functions
+  async function checkAuthStatus() {
+    try {
+      const response = await fetch("/auth/status");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated) {
+          currentUser = data.user;
+          showChatInterface();
+          return true;
+        }
+      }
+      showAuthInterface();
+      return false;
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      showAuthInterface();
+      return false;
+    }
+  }
+
+  function showAuthInterface() {
+    authContainer.style.display = "flex";
+    chatContainer.style.display = "none";
+  }
+
+  function showChatInterface() {
+    authContainer.style.display = "none";
+    chatContainer.style.display = "flex";
+    
+    if (currentUser) {
+      userName.textContent = currentUser.name;
+      userAvatar.src = currentUser.avatar_url || "/static/default-avatar.png";
+      userAvatar.alt = currentUser.name;
+    }
+    
+    // Initialize speech recognition only when authenticated
+    if (!recognition) {
+      initializeSpeechRecognition();
+    }
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      const response = await fetch("/auth/google/login");
+      if (response.ok) {
+        const data = await response.json();
+        // Redirect to Google OAuth
+        window.location.href = data.auth_url;
+      } else {
+        showError("Failed to initiate Google login");
+      }
+    } catch (error) {
+      console.error("Error initiating Google login:", error);
+      showError("Failed to initiate Google login");
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      const response = await fetch("/auth/logout", { method: "POST" });
+      if (response.ok) {
+        currentUser = null;
+        threadId = null; // Reset thread on logout
+        responsePane.innerHTML = ""; // Clear chat history
+        showAuthInterface();
+      } else {
+        showError("Failed to logout");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+      showError("Failed to logout");
+    }
+  }
+
+  // Event listeners
+  googleLoginBtn.addEventListener("click", handleGoogleLogin);
+  logoutBtn.addEventListener("click", handleLogout);
+
+  // Check authentication status on page load
+  checkAuthStatus();
 
   function showError(message) {
     const errorMessage = document.createElement("div");
@@ -218,9 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initialize speech recognition
-  initializeSpeechRecognition();
-
   micButton.addEventListener("click", () => {
     if (!recognition || micButton.disabled) return;
 
@@ -268,6 +359,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function sendMessage() {
+    // Check if user is authenticated
+    if (!currentUser) {
+      showError("Please login to send messages");
+      return;
+    }
+    
     const message = userInput.value.trim();
     if (message || selectedFile) {
       if (message) {
@@ -302,7 +399,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (!response.ok) {
-          console.error("Failed to send message", response.statusText);
+          if (response.status === 401) {
+            // Authentication failed, redirect to login
+            showError("Session expired. Please login again.");
+            currentUser = null;
+            showAuthInterface();
+          } else {
+            showError(`Failed to send message: ${response.statusText}`);
+          }
           hideLoadingIndicator();
           return;
         }

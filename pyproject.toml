@@ -19,6 +19,9 @@ pillow = "^11.0.0"
 beautifulsoup4 = "^4.12.3"
 requests = "^2.32.3"
 tiktoken = "^0.8.0"
+authlib = "^1.2.0"
+httpx = "^0.24.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.0.0"

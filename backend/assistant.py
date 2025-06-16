@@ -29,6 +29,7 @@ from storage.conversations import (
     get_conversation_contents,
     update_conversation_contents,
 )
+from auth.models import User
 
 # Type aliases for better readability
 MessageContent = Union[str, List[Dict[str, Any]]]
@@ -36,9 +37,6 @@ ConversationMessage = Dict[str, Any]
 RecipeData = Dict[str, Any]
 
 logging.basicConfig(level=getattr(logging, config.LOG_LEVEL.upper()))
-
-
-USER_ID = uuid.UUID("1d7bec80-9ea3-4359-8707-2fffd74a925a")  # Not worrying about tenants for now
 
 pc = Pinecone(api_key=config.PINECONE_API_KEY)
 index = pc.Index("recipes1")
@@ -95,6 +93,7 @@ EMBEDDINGS_MODEL = "text-embedding-3-small"
 
 async def chat(
     db: Session,
+    user: User,
     user_message: str,
     thread_id: Optional[str] = None,
     attachment: Optional[UploadFile] = None,
@@ -102,12 +101,12 @@ async def chat(
     # Initialize the thread if it's the first message
     if thread_id is None:
         thread = upsert_conversation(
-            db, ConversationUpsert(user_id=USER_ID, contents="")
+            db, ConversationUpsert(user_id=user.id, contents="")
         )
         thread_id = str(thread.id)
     else:
         thread = get_conversation(db, uuid.UUID(thread_id))
-        if thread is None:
+        if thread is None or thread.user_id != user.id:
             raise HTTPException(status_code=404, detail="Conversation not found")
 
     user_message = process_text_with_urls(user_message)
@@ -126,7 +125,7 @@ async def chat(
 
     prompt = get_prompt(
         get_conversation_contents(thread),
-        find_relevant_recipes(user_message),
+        find_relevant_recipes(user_message, user.id),
         max_tokens=MAX_TOKENS - len(get_tokens(json.dumps(user_message_content))),
     )
     messages = [
@@ -145,7 +144,7 @@ async def chat(
         for tool_call in tool_calls:
             attributes = json.loads(tool_call.function.arguments)
             if tool_call.function.name == "add_recipe":
-                recipe_id = add_recipe(attributes["recipe_yaml"])
+                recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
                 messages.append(
                     {
                         "role": "function",
@@ -154,7 +153,7 @@ async def chat(
                     }
                 )
             elif tool_call.function.name == "update_recipe":
-                update_recipe(attributes["recipe_id"], attributes["recipe_yaml"])
+                update_recipe(attributes["recipe_id"], attributes["recipe_yaml"], user.id)
                 messages.append(
                     {
                         "role": "function",
@@ -223,10 +222,10 @@ def get_embeddings(contents: str) -> List[List[float]]:
     return embeddings
 
 
-def find_relevant_recipes(user_query: str, top_k: int = 5) -> List[str]:
+def find_relevant_recipes(user_query: str, user_id: uuid.UUID, top_k: int = 5) -> List[str]:
     query_embedding = get_embeddings(user_query)
     query_results = index.query(
-        namespace=f"user_{USER_ID}",
+        namespace=f"user_{user_id}",
         vector=query_embedding[0],
         top_k=top_k,
         include_values=False,
@@ -321,13 +320,13 @@ def process_text_with_urls(text: str) -> str:
     return text
 
 
-def add_recipe(recipe_yaml: str) -> str:
+def add_recipe(recipe_yaml: str, user_id: uuid.UUID) -> str:
     recipe_id = str(uuid.uuid4())
-    update_recipe(recipe_id, recipe_yaml)
+    update_recipe(recipe_id, recipe_yaml, user_id)
     return recipe_id
 
 
-def update_recipe(recipe_id: str, recipe_yaml: str) -> str:
+def update_recipe(recipe_id: str, recipe_yaml: str, user_id: uuid.UUID) -> str:
     recipe_data = yaml.safe_load(recipe_yaml)
     recipe_data["recipe_id"] = recipe_id
     yaml_string = yaml.dump(recipe_data)
@@ -345,7 +344,7 @@ def update_recipe(recipe_id: str, recipe_yaml: str) -> str:
                 },
             },
         ],
-        namespace=f"user_{USER_ID}",
+        namespace=f"user_{user_id}",
     )
 
     return recipe_id

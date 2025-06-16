@@ -7,6 +7,10 @@ class Config:
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     PINECONE_API_KEY: str = os.getenv("PINECONE_API_KEY", "")
     
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    
     # Database
     DB_HOST: str = os.getenv("DB_HOST", "database")
     DB_PORT: str = os.getenv("DB_PORT", "5432")
@@ -20,6 +24,7 @@ class Config:
     PORT: int = int(os.getenv("PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     RELOAD: bool = os.getenv("RELOAD", "true").lower() == "true"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
     
     @property
     def DATABASE_URL(self) -> str:
@@ -30,6 +35,8 @@ class Config:
         required_vars = [
             ("OPENAI_API_KEY", self.OPENAI_API_KEY),
             ("PINECONE_API_KEY", self.PINECONE_API_KEY),
+            ("GOOGLE_CLIENT_ID", self.GOOGLE_CLIENT_ID),
+            ("GOOGLE_CLIENT_SECRET", self.GOOGLE_CLIENT_SECRET),
         ]
         
         missing_vars = [name for name, value in required_vars if not value]

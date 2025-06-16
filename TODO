@@ -1,29 +1,65 @@
-Foundational:
+# Recipe App TODO
 
-DONE - Support attachments (images with recipes in them)
-DONE - Support URLs (links to recipe sites)
-DONE - Respect text/token limits in conversation history
+## 🎯 High Priority - Core Functionality
 
-- Also check and decide what to do about image content in history
-  - Part of the problem is that the UI form will re-upload currently
+### Error Handling & Robustness
+- [ ] Improve error handling patterns throughout codebase
+- [ ] Add proper exception handling for API failures (OpenAI, Pinecone)
+- [ ] Handle network timeouts and retries gracefully
+- [ ] Add validation for recipe YAML format
 
-Optimizations / UX:
+### Testing & Quality
+- [ ] Expand test coverage beyond basic structure
+- [ ] Add integration tests for chat functionality
+- [ ] Add tests for recipe storage/retrieval
+- [ ] Set up test data fixtures
 
-- For desktop UX maybe second-pane the relevant recipe up on the side of the chat history?
-- Handle "no relevant recipes" well
-- Show tool use - recipe addition/update (maybe with recipe contents)
-- Handle speech-to-text input
-- Handle text-to-speech output
-- Optimize redundant recipes in context window
-- Better Mobile UX
-- Improve URL extraction (it's pretty janky)
+### Documentation
+- [ ] Add OpenAPI/Swagger documentation for API endpoints
+- [ ] Document recipe YAML schema
+- [ ] Add architecture documentation
 
-- Recipe archival?
+## 🔧 Technical Improvements
 
-Technical
+### Performance & Optimization
+- [ ] Optimize redundant recipes in context window
+- [ ] Handle TPM rate limits (3k/minute for GPT-4o)
+- [ ] Async IO cleanup and optimization
+- [ ] Image content management in conversation history
 
-- TPM rate limits - not sure what I can do about it but 3k/minute for current 4o is pretty limiting
-- async io cleanup
-- Enforce type hints (and apply them more completely)
-- Get black working
-- Get prettier working
+### Code Quality
+- [ ] Add more comprehensive type hints for complex types
+- [ ] Improve URL extraction (currently janky)
+- [ ] Clean up console.log statements
+
+## ✨ User Experience
+
+### Interface Enhancements
+- [ ] Desktop UX: second-pane for relevant recipes
+- [ ] Handle "no relevant recipes" state gracefully
+- [ ] Show tool use feedback (recipe addition/update with contents)
+- [ ] Add text-to-speech output
+- [ ] Fix image re-upload issue in UI form
+
+### Features
+- [ ] Recipe archival system
+- [ ] Recipe categories/tagging
+- [ ] Recipe search and filtering
+- [ ] Export recipes to different formats
+
+## ✅ Completed
+
+### Infrastructure
+- [x] Environment configuration (.env.example, validation)
+- [x] Development tools (Black, Prettier, pytest, pre-commit)
+- [x] VSCode/Cursor integration
+- [x] Database cleanup and .gitignore improvements
+- [x] Comprehensive type hints
+- [x] CI/CD pipeline (GitHub Actions)
+
+### Core Features  
+- [x] Support attachments (images with recipes)
+- [x] Support URLs (links to recipe sites)
+- [x] Respect text/token limits in conversation history
+- [x] Better mobile UX
+- [x] Speech-to-text input

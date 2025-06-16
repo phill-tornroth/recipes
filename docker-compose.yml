@@ -12,6 +12,9 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - SECRET_KEY=${SECRET_KEY}
       - DB_HOST=database
       - DB_PORT=5432
       - DB_NAME=recipes

@@ -7,9 +7,16 @@ ALTER DATABASE recipes OWNER TO recipe_user;
 
 -- Create the users table if it doesn't exist
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(500),
+    provider VARCHAR(50) NOT NULL DEFAULT 'google',
+    provider_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE,
+    CONSTRAINT unique_provider_id UNIQUE (provider, provider_id)
 );
 
 -- Create the recipes table if it doesn't exist
@@ -20,7 +27,5 @@ CREATE TABLE IF NOT EXISTS conversations (
     contents TEXT NOT NULL
 );
 
--- Create me
-INSERT INTO users (id, email, password)
-VALUES ('1d7bec80-9ea3-4359-8707-2fffd74a925a', 'famousactress@gmail.com', '')
-ON CONFLICT (id) DO NOTHING;
+-- Note: Users will now be created through Google OAuth
+-- Remove the hardcoded user insertion

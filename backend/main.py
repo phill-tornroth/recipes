@@ -12,6 +12,9 @@ from sqlalchemy.orm import Session
 from config import config
 from assistant import chat
 from storage.dependencies import get_db
+from auth.routes import router as auth_router
+from auth.dependencies import get_current_user
+from auth.models import User
 
 # Validate required environment variables on startup
 config.validate_required_vars()
@@ -25,6 +28,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include authentication routes
+app.include_router(auth_router)
 
 # Serve static files (CSS, JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -57,6 +63,7 @@ async def chat_with_assistant(
     message: str = Form(...),
     attachment: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> MessageResponse:
     try:
         message_data = json.loads(message)
@@ -68,6 +75,6 @@ async def chat_with_assistant(
     thread_id = payload.thread_id
 
     # Call the chat function with the message and attachment
-    response, new_thread_id = await chat(db, user_message, thread_id, attachment)
+    response, new_thread_id = await chat(db, current_user, user_message, thread_id, attachment)
     db.commit()
     return MessageResponse(response=response, thread_id=new_thread_id)

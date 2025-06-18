@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import Mock, patch
 
 import assistant
+import pytest
 
 
 class TestAssistant:
@@ -131,3 +132,47 @@ class TestAssistant:
                         mock_index.upsert.assert_called_once()
                         call_args = mock_index.upsert.call_args
                         assert call_args[1]["namespace"] == f"user_{user_id}"
+
+    def test_update_recipe_with_yaml_parsing_error(self):
+        """Test recipe update handles YAML parsing errors gracefully."""
+        # This is the problematic YAML from the bug report
+        bad_yaml = '''recipe:
+  title: "Dashi"
+  estimated_cooking_time: "50 minutes"
+  serves: "Variable, based on use"
+  ingredients:
+    - name: "Dried shiitake mushrooms"
+      qty: "Two handfuls"
+    - name: "Dried kombu"
+      qty: "1 sheet, approximately 8.5" x 11", broken into bookmark sized pieces"
+  steps:
+    - step: "Add dried shiitake mushrooms and kombu to water in a 4-quart pan."
+    - step: "Bring the water to 140 degrees F and maintain the temperature for 50 minutes."
+  notes: "Use this as a base for soups or other dishes."'''
+
+        user_id = uuid.uuid4()
+        test_id = "test-yaml-fix"
+
+        with patch("assistant.get_embeddings") as mock_embeddings:
+            with patch("assistant.index") as mock_index:
+                mock_embeddings.return_value = [[0.1, 0.2, 0.3]]
+
+                # This should succeed because our fix handles the unescaped quotes
+                result = assistant.update_recipe(test_id, bad_yaml, user_id)
+                assert result == test_id
+
+                # Verify the recipe was processed and stored
+                mock_index.upsert.assert_called_once()
+
+    def test_update_recipe_with_unfixable_yaml(self):
+        """Test recipe update raises error for unfixable YAML."""
+        # Completely broken YAML that can't be fixed
+        broken_yaml = """
+this: is: not: valid: yaml: at: all
+  - missing proper structure
+    completely broken
+"""
+        user_id = uuid.uuid4()
+
+        with pytest.raises(ValueError, match="Invalid YAML format in recipe"):
+            assistant.update_recipe("test-broken", broken_yaml, user_id)

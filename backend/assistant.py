@@ -168,24 +168,35 @@ async def chat(
     if tool_calls:
         for tool_call in tool_calls:
             attributes = json.loads(tool_call.function.arguments)
-            if tool_call.function.name == "add_recipe":
-                recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
+            try:
+                if tool_call.function.name == "add_recipe":
+                    recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
+                    messages.append(
+                        {
+                            "role": "function",
+                            "name": "add_recipe",
+                            "content": json.dumps({"recipe_id": recipe_id}),
+                        }
+                    )
+                elif tool_call.function.name == "update_recipe":
+                    update_recipe(
+                        attributes["recipe_id"], attributes["recipe_yaml"], user.id
+                    )
+                    messages.append(
+                        {
+                            "role": "function",
+                            "name": "add_recipe",
+                            "content": json.dumps({"status": "success"}),
+                        }
+                    )
+            except ValueError as e:
+                # Handle YAML parsing errors gracefully
+                error_msg = f"Error processing recipe: {str(e)}"
                 messages.append(
                     {
                         "role": "function",
-                        "name": "add_recipe",
-                        "content": json.dumps({"recipe_id": recipe_id}),
-                    }
-                )
-            elif tool_call.function.name == "update_recipe":
-                update_recipe(
-                    attributes["recipe_id"], attributes["recipe_yaml"], user.id
-                )
-                messages.append(
-                    {
-                        "role": "function",
-                        "name": "add_recipe",
-                        "content": json.dumps({"status": "success"}),
+                        "name": tool_call.function.name,
+                        "content": json.dumps({"error": error_msg}),
                     }
                 )
 
@@ -332,35 +343,51 @@ async def chat_with_feedback(
 
             # Execute the tool
             attributes = json.loads(tool_call.function.arguments)
-            if tool_call.function.name == "add_recipe":
-                recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
+            try:
+                if tool_call.function.name == "add_recipe":
+                    recipe_id = add_recipe(attributes["recipe_yaml"], user.id)
+                    messages.append(
+                        {
+                            "role": "function",
+                            "name": "add_recipe",
+                            "content": json.dumps({"recipe_id": recipe_id}),
+                        }
+                    )
+                    yield {
+                        "type": "tool_complete",
+                        "tool": "add_recipe",
+                        "message": "✅ Recipe added successfully!",
+                    }
+                elif tool_call.function.name == "update_recipe":
+                    update_recipe(
+                        attributes["recipe_id"], attributes["recipe_yaml"], user.id
+                    )
+                    messages.append(
+                        {
+                            "role": "function",
+                            "name": "add_recipe",
+                            "content": json.dumps({"status": "success"}),
+                        }
+                    )
+                    yield {
+                        "type": "tool_complete",
+                        "tool": "update_recipe",
+                        "message": "✅ Recipe updated successfully!",
+                    }
+            except ValueError as e:
+                # Handle YAML parsing errors gracefully
+                error_msg = f"Error processing recipe: {str(e)}"
                 messages.append(
                     {
                         "role": "function",
-                        "name": "add_recipe",
-                        "content": json.dumps({"recipe_id": recipe_id}),
+                        "name": tool_call.function.name,
+                        "content": json.dumps({"error": error_msg}),
                     }
                 )
                 yield {
-                    "type": "tool_complete",
-                    "tool": "add_recipe",
-                    "message": "✅ Recipe added successfully!",
-                }
-            elif tool_call.function.name == "update_recipe":
-                update_recipe(
-                    attributes["recipe_id"], attributes["recipe_yaml"], user.id
-                )
-                messages.append(
-                    {
-                        "role": "function",
-                        "name": "add_recipe",
-                        "content": json.dumps({"status": "success"}),
-                    }
-                )
-                yield {
-                    "type": "tool_complete",
-                    "tool": "update_recipe",
-                    "message": "✅ Recipe updated successfully!",
+                    "type": "tool_error",
+                    "tool": tool_call.function.name,
+                    "message": f"❌ {error_msg}",
                 }
 
         # Get final response after tool use
@@ -537,7 +564,51 @@ def add_recipe(recipe_yaml: str, user_id: uuid.UUID) -> str:
 
 
 def update_recipe(recipe_id: str, recipe_yaml: str, user_id: uuid.UUID) -> str:
-    recipe_data = yaml.safe_load(recipe_yaml)
+    try:
+        recipe_data = yaml.safe_load(recipe_yaml)
+    except yaml.YAMLError as e:
+        # Log the error and bad YAML for debugging
+        print(f"YAML parsing error: {e}")
+        print(f"Bad YAML content: {recipe_yaml}")
+
+        # Try to fix common YAML issues
+        try:
+            import re
+
+            fixed_yaml = recipe_yaml
+
+            # Fix unescaped quotes in quoted strings - more comprehensive approach
+            # Find lines with qty: "..." that contain unescaped quotes
+            lines = fixed_yaml.split("\n")
+            for i, line in enumerate(lines):
+                # Look for qty: "..." patterns that might have unescaped quotes
+                if "qty:" in line and '"' in line:
+                    # Extract the value part after qty:
+                    parts = line.split("qty:", 1)
+                    if len(parts) == 2:
+                        prefix = parts[0] + "qty:"
+                        value_part = parts[1].strip()
+
+                        # If it starts and ends with quotes but has unescaped quotes inside
+                        if (
+                            value_part.startswith('"')
+                            and value_part.endswith('"')
+                            and value_part.count('"') > 2
+                        ):
+                            # Extract content between first and last quote
+                            content = value_part[1:-1]  # Remove first and last quote
+                            # Escape any remaining quotes in the content
+                            escaped_content = content.replace('"', '\\"')
+                            # Reconstruct the line
+                            lines[i] = f'{prefix} "{escaped_content}"'
+
+            fixed_yaml = "\n".join(lines)
+            recipe_data = yaml.safe_load(fixed_yaml)
+            print(f"Successfully fixed YAML parsing issue")
+        except yaml.YAMLError as e2:
+            print(f"Could not fix YAML: {e2}")
+            raise ValueError(f"Invalid YAML format in recipe: {e}")
+
     recipe_data["recipe_id"] = recipe_id
     yaml_string = yaml.dump(recipe_data)
     embeddings = get_embeddings(yaml_string)

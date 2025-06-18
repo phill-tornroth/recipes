@@ -35,7 +35,13 @@ class JWTHandler:
             if user_id is None or email is None:
                 return None
 
-            return {"user_id": uuid.UUID(user_id), "email": email}
+            return {
+                "sub": user_id,
+                "email": email,
+                "user_id": uuid.UUID(user_id),
+                "exp": payload.get("exp"),
+                "iat": payload.get("iat"),
+            }
         except JWTError:
             return None
         except ValueError:  # Invalid UUID

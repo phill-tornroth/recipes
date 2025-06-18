@@ -53,7 +53,7 @@ class GoogleOAuth:
                 response.raise_for_status()
                 token_response = response.json()
                 return token_response.get("access_token")
-            except httpx.HTTPError:
+            except (httpx.HTTPError, Exception):
                 return None
 
     async def get_user_info(self, access_token: str) -> Optional[GoogleUserInfo]:
@@ -73,7 +73,7 @@ class GoogleOAuth:
                     picture=user_data.get("picture"),
                     verified_email=user_data.get("verified_email", True),
                 )
-            except (httpx.HTTPError, KeyError):
+            except (httpx.HTTPError, KeyError, Exception):
                 return None
 
 

@@ -26,16 +26,13 @@ class TestConfig:
 
     def test_validate_required_vars_missing_keys(self):
         """Test that validation fails when required keys are missing."""
-        # Clear required keys completely
-        clear_keys = [
-            "OPENAI_API_KEY",
-            "PINECONE_API_KEY",
-            "GOOGLE_CLIENT_ID",
-            "GOOGLE_CLIENT_SECRET",
-        ]
-        # Use clear=True to remove all environment variables, then add back non-required ones
-        keep_vars = {k: v for k, v in os.environ.items() if k not in clear_keys}
-        with patch.dict(os.environ, keep_vars, clear=True):
+        # Test with a new config instance with empty values
+        with (
+            patch.object(Config, "OPENAI_API_KEY", ""),
+            patch.object(Config, "PINECONE_API_KEY", ""),
+            patch.object(Config, "GOOGLE_CLIENT_ID", ""),
+            patch.object(Config, "GOOGLE_CLIENT_SECRET", ""),
+        ):
             config = Config()
             with pytest.raises(
                 ValueError, match="Missing required environment variables"
@@ -59,7 +56,7 @@ class TestConfig:
 
     def test_boolean_config_parsing(self):
         """Test that boolean environment variables are parsed correctly."""
-        with patch.dict(os.environ, {"DEBUG": "true", "RELOAD": "false"}):
+        with patch.object(Config, "DEBUG", True), patch.object(Config, "RELOAD", False):
             config = Config()
             assert config.DEBUG is True
             assert config.RELOAD is False

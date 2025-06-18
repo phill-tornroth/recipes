@@ -149,18 +149,15 @@ class TestJWTHandler:
 
     def test_verify_token_expired(self):
         """Test JWT token verification with expired token."""
-        # Create a token that's already expired
+        # Create a token with a very short expiration time
         user_id = uuid.uuid4()
         email = "test@example.com"
 
-        # Mock datetime to create expired token
-        past_time = datetime.utcnow() - timedelta(hours=1)
-
-        with patch("auth.jwt_handler.datetime") as mock_datetime:
-            mock_datetime.utcnow.return_value = past_time
+        # Use a very short expiration time by mocking the ACCESS_TOKEN_EXPIRE_HOURS
+        with patch.object(JWTHandler, "ACCESS_TOKEN_EXPIRE_HOURS", -1):
             token = JWTHandler.create_access_token(user_id, email)
 
-        # Verify expired token with current time
+        # Verify expired token
         payload = JWTHandler.verify_token(token)
 
         assert payload is None

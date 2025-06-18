@@ -405,9 +405,15 @@ class TestAuthIntegration:
 
         # Mock OAuth service
         with patch("auth.oauth.GoogleOAuth") as mock_oauth_class:
+            from unittest.mock import AsyncMock
+
             mock_oauth = Mock()
-            mock_oauth.exchange_code_for_token.return_value = "test_access_token"
-            mock_oauth.get_user_info.return_value = GoogleUserInfo(**user_data)
+            mock_oauth.exchange_code_for_token = AsyncMock(
+                return_value="test_access_token"
+            )
+            mock_oauth.get_user_info = AsyncMock(
+                return_value=GoogleUserInfo(**user_data)
+            )
             mock_oauth_class.return_value = mock_oauth
 
             # Mock user repository

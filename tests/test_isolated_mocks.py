@@ -33,6 +33,7 @@ def test_mock_setup():
     with (
         patch("pinecone.grpc.PineconeGRPC") as mock_pinecone_class,
         patch("openai.OpenAI") as mock_openai_class,
+        patch("assistant.normalize_image_to_base64_jpeg") as mock_normalize,
     ):
         # Set up mocks
         mock_pinecone = Mock()
@@ -49,6 +50,9 @@ def test_mock_setup():
         mock_openai.chat.completions.create.return_value = mock_completion
         mock_openai_class.return_value = mock_openai
 
+        # Mock the image normalization function
+        mock_normalize.return_value = "data:image/jpeg;base64,fake_base64_data"
+
         # Now import assistant (this will use our mocks)
         import assistant
 
@@ -58,7 +62,7 @@ def test_mock_setup():
 
         # Test a basic function
         result = assistant.normalize_image_to_base64_jpeg(b"fake_image_data")
-        assert result is not None
+        assert result == "data:image/jpeg;base64,fake_base64_data"
 
 
 def test_basic_functionality():
@@ -80,5 +84,5 @@ def test_basic_functionality():
         from config import Config
 
         config = Config()
-        assert config.OPENAI_API_KEY == "test-key"
-        assert config.PINECONE_API_KEY == "test-key"
+        assert config.OPENAI_API_KEY == "test-openai-key"
+        assert config.PINECONE_API_KEY == "test-pinecone-key"

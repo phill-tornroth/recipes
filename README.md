@@ -1,6 +1,6 @@
 # Recipe Assistant
 
-A multi-user recipe management application with AI-powered chat assistance, built with FastAPI, PostgreSQL, Pinecone, and OpenAI.
+**Personal AI Development Testbed** - This project serves as a personal testing ground for coding with AI tools and exploring concepts related to "Softerware" - an idea I introduce in [this talk](https://share.zight.com/Z4uByjWk). It's a multi-user recipe management application with AI-powered chat assistance, built with FastAPI, PostgreSQL, Pinecone, and OpenAI.
 
 ## Table of Contents
 
@@ -12,8 +12,6 @@ A multi-user recipe management application with AI-powered chat assistance, buil
   - [Google OAuth Setup](#google-oauth-setup)
   - [Manual Installation](#manual-installation)
 - [Development](#development)
-- [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Introduction
@@ -262,14 +260,8 @@ The project includes VSCode/Cursor configuration for seamless development:
 - `F5` - Start debugging FastAPI server
 - `Ctrl/Cmd+Shift+P` → "Tasks: Run Task" - Access development tasks
 
-## Usage
-
-Instructions on how to use the project will go here.
-
-## Contributing
-
-Guidelines for contributing to the project will go here.
-
 ## License
 
-Information about the project's license will go here.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Summary:** This is free and open source software. You can use, modify, and distribute it for any purpose, including commercial use. No attribution required, but appreciated!

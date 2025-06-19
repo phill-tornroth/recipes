@@ -1,8 +1,9 @@
 import json
 import os
-from typing import Optional
+from typing import List, Optional
 
-from assistant import chat, chat_with_feedback
+import yaml
+from assistant import add_recipe, chat, chat_with_feedback
 from auth.dependencies import get_current_user
 from auth.models import User
 from auth.routes import router as auth_router
@@ -45,9 +46,23 @@ class MessageResponse(BaseModel):
     thread_id: str
 
 
+class BulkUploadResponse(BaseModel):
+    success: bool
+    message: str
+    recipes_added: int
+    errors: List[str] = []
+
+
 @app.get("/", response_class=HTMLResponse)
 async def read_index() -> HTMLResponse:
     with open(os.path.join("static", "index.html"), "r") as file:
+        html_content = file.read()
+    return HTMLResponse(content=html_content, status_code=200)
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def read_settings() -> HTMLResponse:
+    with open(os.path.join("static", "settings.html"), "r") as file:
         html_content = file.read()
     return HTMLResponse(content=html_content, status_code=200)
 
@@ -126,3 +141,113 @@ async def chat_with_assistant_stream(
             "Access-Control-Allow-Headers": "*",
         },
     )
+
+
+@app.post("/recipes/bulk-upload", response_model=BulkUploadResponse)
+async def bulk_upload_recipes(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> BulkUploadResponse:
+    """
+    Upload a YAML file containing one or more recipes for bulk import.
+
+    The YAML file can contain either:
+    1. A single recipe with the standard recipe structure
+    2. Multiple recipes in a list format:
+       recipes:
+         - recipe: {...}
+         - recipe: {...}
+    3. Multiple recipe documents separated by ---
+    """
+    if not file.filename or not file.filename.endswith((".yaml", ".yml")):
+        raise HTTPException(
+            status_code=400, detail="File must be a YAML file (.yaml or .yml)"
+        )
+
+    try:
+        # Read file contents
+        contents = await file.read()
+        yaml_content = contents.decode("utf-8")
+
+        recipes_added = 0
+        errors = []
+
+        try:
+            # Try to parse as multiple YAML documents first
+            documents = list(yaml.safe_load_all(yaml_content))
+
+            if len(documents) == 1:
+                # Single document - check if it's a recipes list or single recipe
+                doc = documents[0]
+                if isinstance(doc, dict):
+                    if "recipes" in doc and isinstance(doc["recipes"], list):
+                        # Format: recipes: [recipe1, recipe2, ...]
+                        recipes_to_process = doc["recipes"]
+                    elif "recipe" in doc:
+                        # Single recipe format
+                        recipes_to_process = [doc]
+                    else:
+                        errors.append(
+                            "Invalid format: YAML must contain 'recipe' or 'recipes' key"
+                        )
+                        recipes_to_process = []
+                else:
+                    errors.append("Invalid format: YAML document must be an object")
+                    recipes_to_process = []
+            else:
+                # Multiple documents
+                recipes_to_process = documents
+
+            # Process each recipe
+            for i, recipe_data in enumerate(recipes_to_process):
+                try:
+                    if not isinstance(recipe_data, dict):
+                        errors.append(f"Recipe {i+1}: Must be an object")
+                        continue
+
+                    if "recipe" not in recipe_data:
+                        errors.append(f"Recipe {i+1}: Missing 'recipe' key")
+                        continue
+
+                    # Convert back to YAML for storage
+                    recipe_yaml = yaml.dump(recipe_data, default_flow_style=False)
+
+                    # Add the recipe using existing function
+                    recipe_id = add_recipe(recipe_yaml, current_user.id)
+                    recipes_added += 1
+
+                except Exception as e:
+                    errors.append(f"Recipe {i+1}: {str(e)}")
+
+        except yaml.YAMLError as e:
+            errors.append(f"YAML parsing error: {str(e)}")
+
+        # Commit changes
+        db.commit()
+
+        if recipes_added > 0:
+            message = f"Successfully imported {recipes_added} recipe{'s' if recipes_added != 1 else ''}"
+            if errors:
+                message += f" with {len(errors)} error{'s' if len(errors) != 1 else ''}"
+            return BulkUploadResponse(
+                success=True,
+                message=message,
+                recipes_added=recipes_added,
+                errors=errors,
+            )
+        else:
+            return BulkUploadResponse(
+                success=False,
+                message="No recipes were imported",
+                recipes_added=0,
+                errors=errors,
+            )
+
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400, detail="File must be valid UTF-8 encoded text"
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

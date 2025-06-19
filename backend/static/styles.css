@@ -455,3 +455,209 @@ body {
     padding: 0;
     word-wrap: normal;
 }
+
+/* Settings Page Styles */
+#settings-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#settings-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#settings-content h1 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    color: #333;
+    border-bottom: 2px solid #e1e4e8;
+    padding-bottom: 10px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.back-btn {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.settings-btn {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.settings-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.settings-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e1e4e8;
+}
+
+.settings-section h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #333;
+    font-size: 1.25em;
+}
+
+.settings-section p {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.upload-area {
+    margin-bottom: 20px;
+}
+
+.upload-dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    margin-bottom: 15px;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.drag-over {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+.upload-dropzone.has-file {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+.upload-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.upload-dropzone p {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.upload-dropzone small {
+    color: #666;
+}
+
+.upload-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.upload-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.upload-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.upload-status {
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+}
+
+.upload-status.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.upload-status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.upload-status.loading {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.format-help {
+    margin-top: 20px;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    background: white;
+}
+
+.format-help summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: 500;
+    background: #f8f9fa;
+    border-radius: 6px 6px 0 0;
+}
+
+.format-help summary:hover {
+    background: #e9ecef;
+}
+
+.format-examples {
+    padding: 16px;
+}
+
+.format-examples h4 {
+    margin: 20px 0 10px 0;
+    color: #333;
+}
+
+.format-examples h4:first-child {
+    margin-top: 0;
+}
+
+.format-examples pre {
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    padding: 12px;
+    overflow-x: auto;
+    font-size: 14px;
+    margin: 10px 0;
+}
+
+.format-examples code {
+    background: transparent;
+    padding: 0;
+}

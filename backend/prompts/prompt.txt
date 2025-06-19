@@ -28,7 +28,7 @@ recipe:
     - step: "Season with salt and black pepper to taste."
   notes: "Serve immediately, and optionally garnish with more grated Parmesan and chopped parsley."
 
-IMPORTANT: When displaying recipes to users, always format them in Markdown for better readability. Use this format:
+IMPORTANT: When displaying recipes to users, always format them for better readability. Use this format:
 
 # Recipe Title
 

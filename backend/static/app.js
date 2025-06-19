@@ -61,8 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentUser) {
       userName.textContent = currentUser.name;
-      userAvatar.src = currentUser.avatar_url || "/static/default-avatar.png";
+      userAvatar.src = currentUser.avatar_url || "/static/default-avatar.svg";
       userAvatar.alt = currentUser.name;
+
+      // Add error handling for broken avatar images
+      userAvatar.onerror = function() {
+        this.src = "/static/default-avatar.svg";
+        this.onerror = null; // Prevent infinite loop
+      };
     }
 
     // Initialize speech recognition only when authenticated

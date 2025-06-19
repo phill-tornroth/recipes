@@ -104,17 +104,17 @@ async def chat_with_assistant_stream(
             async for event in chat_with_feedback(
                 db, current_user, user_message, thread_id, attachment
             ):
-                yield f"data: {json.dumps(event)}\n\n"
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
 
             # Commit the database transaction
             db.commit()
 
             # Signal end of stream
-            yield f"data: {json.dumps({'type': 'end'})}\n\n"
+            yield f"data: {json.dumps({'type': 'end'}, ensure_ascii=False)}\n\n"
         except Exception as e:
             # Rollback on error
             db.rollback()
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         generate_stream(),

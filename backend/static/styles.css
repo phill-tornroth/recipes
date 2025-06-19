@@ -1,5 +1,5 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     margin: 0;
     padding: 0;
     display: flex;
@@ -358,4 +358,100 @@ body {
 @keyframes fadeOut {
     from { opacity: 1; transform: translateY(0); }
     to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Markdown Styling for Messages */
+.message h1, .message h2, .message h3, .message h4, .message h5, .message h6 {
+    margin: 16px 0 12px 0;
+    color: #333;
+    line-height: 1.3;
+}
+
+.message h1 {
+    font-size: 1.4em;
+    font-weight: bold;
+    border-bottom: 2px solid #e1e4e8;
+    padding-bottom: 8px;
+}
+
+.message h2 {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 24px;
+}
+
+.message h3 {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.message strong, .message b {
+    font-weight: bold;
+    color: #333;
+}
+
+.message em, .message i {
+    font-style: italic;
+}
+
+.message ul, .message ol {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.message ul li, .message ol li {
+    margin: 4px 0;
+    line-height: 1.5;
+}
+
+.message ol {
+    counter-reset: item;
+}
+
+.message ol li {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.message ol li::before {
+    content: counter(item) ". ";
+    counter-increment: item;
+    font-weight: bold;
+    color: #666;
+}
+
+.message p {
+    margin: 12px 0;
+    line-height: 1.6;
+}
+
+.message code {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    font-size: 85%;
+    margin: 0;
+    padding: 0.2em 0.4em;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.message pre {
+    background-color: #f6f8fa;
+    border-radius: 6px;
+    font-size: 85%;
+    line-height: 1.45;
+    overflow: auto;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.message pre code {
+    background-color: transparent;
+    border: 0;
+    display: inline;
+    line-height: inherit;
+    margin: 0;
+    max-width: auto;
+    overflow: visible;
+    padding: 0;
+    word-wrap: normal;
 }
